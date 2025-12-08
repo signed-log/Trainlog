@@ -501,11 +501,11 @@ function renderFlags(data, type, row) {
 function renderVisibility(data, type, row) {
     switch(data) {
         case 'public':
-            return '<i class="bi bi-globe" data-toggle="tooltip" style="cursor:context-menu;" data-placement="top" data-bs-original-title="Public"></i>'
+            return '<i class="bi bi-globe" data-toggle="tooltip" style="cursor:context-menu;" data-placement="top" data-bs-original-title="{{visibility_public}}"></i>'
         case 'friends':
-            return '<i class="bi bi-people" data-toggle="tooltip" style="cursor:context-menu;" data-placement="top" data-bs-original-title="Friends"></i></span>'
+            return '<i class="bi bi-people" data-toggle="tooltip" style="cursor:context-menu;" data-placement="top" data-bs-original-title="{{visibility_friends}}"></i></span>'
         case 'private':
-            return '<i class="bi bi-lock" data-toggle="tooltip" style="cursor:context-menu;" data-placement="top" data-bs-original-title="Private"></i>'
+            return '<i class="bi bi-lock" data-toggle="tooltip" style="cursor:context-menu;" data-placement="top" data-bs-original-title="{{visibility_private}}"></i>'
         default:
             return '';
     }
