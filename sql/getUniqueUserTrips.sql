@@ -47,8 +47,10 @@ FROM YearlyFiltered
 WHERE username = :username
   AND (:lastLocal = 'all' OR julianday(last_modified) > julianday(:lastLocal))
   AND (
-      :public = 0 
-      OR type IN ('train', 'air', 'bus', 'ferry', 'aerialway', 'tram', 'metro')
+      :public = 0
+      OR (:public = 1 AND visibility = 'public')
+      OR (:friend = 1 AND visibility = 'friends')
+      OR (visibility IS NULL AND type IN ('train', 'air', 'bus', 'ferry', 'aerialway', 'tram', 'metro'))
   )
 GROUP BY origin_station, destination_station, trip_length, trip_year, past, current, plannedFuture, future
 ORDER BY start_datetime = 1 DESC, start_datetime DESC;

@@ -608,6 +608,7 @@
     "smart_search_operator": "Operador de transporte",
     "smart_search_line": "Nome da linha",
     "smart_search_country": "Países visitados (ISO3166-1 alpha2, ex: FR, DE, NO)",
+
     "smart_search_material": "Tipo/modelo de veículo",
     "smart_search_reg": "Registro",
     "smart_search_notes": "Notas da viagem",

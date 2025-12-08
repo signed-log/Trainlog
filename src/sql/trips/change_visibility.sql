@@ -1,0 +1,1 @@
+UPDATE trips SET visibility = :visibility WHERE trip_id = :trip_id;

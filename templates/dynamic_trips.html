@@ -75,6 +75,7 @@
                             <div class="d-flex mb-1"><span style="width: 100px; flex-shrink: 0;"><code>operator:</code></span> <span>{{smart_search_operator}}</span></div>
                             <div class="d-flex mb-1"><span style="width: 100px; flex-shrink: 0;"><code>line:</code></span> <span>{{smart_search_line}}</span></div>
                             <div class="d-flex mb-1"><span style="width: 100px; flex-shrink: 0;"><code>country:</code></span> <span>{{smart_search_country}}</span></div>
+                            <div class="d-flex mb-1"><span style="width: 100px; flex-shrink: 0;"><code>visibility:</code></span> <span>{{smart_search_visibility}}</span></div>
                             <div class="d-flex mb-1"><span style="width: 100px; flex-shrink: 0;"><code>material:</code></span> <span>{{smart_search_material}}</span></div>
                             <div class="d-flex mb-1"><span style="width: 100px; flex-shrink: 0;"><code>reg:</code></span> <span>{{smart_search_reg}}</span></div>
                             <div class="d-flex"><span style="width: 100px; flex-shrink: 0;"><code>notes:</code></span> <span>{{smart_search_notes}}</span></div>
@@ -126,6 +127,7 @@
             <li class="dropdown-item"><a onclick="exportGeojson();"><i class="fa-solid fa-draw-polygon"></i>  {{exportGeojson}}</a></li>
             {% if not isPublic %}
             <li class="dropdown-item"><a onclick="mergeTrips();"><i class="fa-solid fa-code-merge"></i>  {{mergeTrips}}</a></li>
+            <li class="dropdown-item"><a onclick="$('#changeVisibilityModal').modal('show');"><i class="fa-solid fa-eye"></i>  {{bulk_change_visibility}}</a></li>
             <hr class="dropdown-divider">
             <li class="dropdown-item"><a onclick="multiDelete();"><i class="fa-solid fa-trash-can" style="color:#c72020;" aria-hidden="true"></i>  {{delete}}</a></li>
             {% endif %}
@@ -150,6 +152,7 @@
                 <th>{{lineName}}</th>
                 <th>{{crossedCountries}}</th>
                 {% if not isPublic %}
+                <th>{{visibility}}</th>
                 <th data-orderable="false">{{price}}</th>
                 {% endif %}
                 <th class="none">{{material_type}}</th>
@@ -180,6 +183,33 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" onclick="attachSelectedTrips($('#ticketSearchInput').val())">{{submit}}</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="changeVisibilityModal" tabindex="-1" role="dialog" aria-labelledby="changeVisibilityModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="changeVisibilityModalLabel">{{bulk_change_visibility}}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="visibilitySelect" class="form-label">{{ visibility_select }}</label>
+          <select name="visibilitySelect" id="visibilitySelect" class="form-select">
+            <option value="public">{{visibility_public}}</option>
+            <option value="friends">{{visibility_friends}}</option>
+            <option value="private">{{visibility_private}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="changeVisibilitySubmit" class="btn btn-primary" style="height: 38px" onclick="bulkChangeVisibility($('#visibilitySelect').val())">
+            <span id="changeVisibilitySubmitLabel">{{submit}}</span>
+            <span id="changeVisibilitySpinner" class="spinner-border spinner-border-sm" role="status" style="display:none"></span>
+        </button>
       </div>
     </div>
   </div>
@@ -468,6 +498,19 @@ function renderFlags(data, type, row) {
     return data;
 }
 
+function renderVisibility(data, type, row) {
+    switch(data) {
+        case 'public':
+            return '<i class="bi bi-globe" data-toggle="tooltip" style="cursor:context-menu;" data-placement="top" data-bs-original-title="Public"></i>'
+        case 'friends':
+            return '<i class="bi bi-people" data-toggle="tooltip" style="cursor:context-menu;" data-placement="top" data-bs-original-title="Friends"></i></span>'
+        case 'private':
+            return '<i class="bi bi-lock" data-toggle="tooltip" style="cursor:context-menu;" data-placement="top" data-bs-original-title="Private"></i>'
+        default:
+            return '';
+    }
+}
+
 const TRANSLATIONS = {
     walk: "{{ walk }}",
     cycle: "{{ cycle }}",
@@ -614,6 +657,7 @@ var table = $('#tripRows');
         { data: 'line_name' },
         { data: 'countries', render: renderFlags },
         {% if not isPublic %}
+        { data: 'visibility', render: renderVisibility },
         {
             data: null,
             render: renderPrices,
@@ -889,6 +933,30 @@ function attachSelectedTrips(ticket_id){
     window.open(`${url}?${urlParams.toString()}`);
 }
 
+function bulkChangeVisibility(visibility){
+    url=`{{ url_for('bulkChangeVisibility', username=username)}}`;
+
+    const urlParams = new URLSearchParams();
+    urlParams.append('trips', checkedTrips);
+    urlParams.append('visibility', visibility);
+
+    document.getElementById('changeVisibilitySubmit').setAttribute('disabled', 'disabled');
+    document.getElementById('changeVisibilitySubmitLabel').style.display = 'none';
+    document.getElementById('changeVisibilitySpinner').style.display = '';
+
+
+    fetch(`${url}?${urlParams.toString()}`).finally(() => {
+        tableObject.ajax.reload();
+        $('#changeVisibilityModal').modal('hide');
+
+        setTimeout(() => {
+            document.getElementById('changeVisibilitySubmit').removeAttribute('disabled');
+            document.getElementById('changeVisibilitySubmitLabel').style.display = '';
+            document.getElementById('changeVisibilitySpinner').style.display = 'none';
+        }, 500)
+    })
+}
+
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-toggle="tooltip"]'))
 var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
   return new bootstrap.Tooltip(tooltipTriggerEl)
@@ -1057,6 +1125,7 @@ $('#submitBtn').on('click', function() {
         'operator:': 9,
         'line:': 10,
         'country:': 11,
+        'visibility:': 12,
         'material:': 13,
         'reg:': 14,
         'notes:': 16
@@ -1079,7 +1148,7 @@ $('#submitBtn').on('click', function() {
                 if (term.toLowerCase().startsWith(prefix)) {
                     let value = term.substring(prefix.length);
                     let isExact = false;
-                    
+
                     if (value) {
                         // Single quotes = exact match
                         if (value.startsWith("'") && value.endsWith("'") && value.length > 1) {

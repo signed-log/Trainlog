@@ -608,6 +608,7 @@
     "smart_search_operator": "Transport operator",
     "smart_search_line": "Line name",
     "smart_search_country": "Countries visited (ISO3166-1 alpha2, ex: FR, DE, NO)",
+    "smart_search_visibility": "Visibility (public, friends, private)",
     "smart_search_material": "Vehicle type/model",
     "smart_search_reg": "Registration",
     "smart_search_notes": "Trip notes",
@@ -729,5 +730,11 @@
     "email_premium_title": "Premium feature",
     "email_premium_greeting": "Hi {username},",
     "email_premium_description": "Email ticket parsing is a premium feature available to Trainlogger members and above.",
-    "email_premium_cta": "Become a member"
+    "email_premium_cta": "Become a member",
+    "visibility": "Visibility",
+    "visibility_select": "Select visibility",
+    "visibility_public": "Public",
+    "visibility_friends": "Friends",
+    "visibility_private": "Private",
+    "bulk_change_visibility": "Set Visibility"
 }

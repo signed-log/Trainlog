@@ -24,5 +24,6 @@ UPDATE trips SET
     currency = :currency,
     ticket_id = :ticket_id,
     purchase_date = :purchase_date,
-    carbon = :carbon
+    carbon = :carbon,
+    visibility = :visibility
 WHERE trip_id = :trip_id

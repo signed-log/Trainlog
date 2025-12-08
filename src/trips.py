@@ -12,6 +12,7 @@ from src.paths import Path
 from src.pg import get_or_create_pg_session, pg_session
 from src.sql.trips import (
     attach_ticket_query,
+    change_visibility_query,
     delete_trip_query,
     duplicate_trip_query,
     insert_trip_query,
@@ -66,6 +67,7 @@ class Trip:
         path,
         is_project,
         trip_id=None,
+        visibility=None,
     ):
         self.trip_id = trip_id
         self.username = username
@@ -97,6 +99,7 @@ class Trip:
         self.is_project = is_project
         self.path = path
         self.carbon = calculate_carbon_footprint_for_trip(vars(self), path) if path else None
+        self.visibility = visibility
 
     def keys(self):
         return tuple(vars(self).keys())
@@ -141,7 +144,8 @@ def create_trip(trip: Trip, pg_session=None):
                 "currency": trip.currency,
                 "ticket_id": trip.ticket_id,
                 "purchase_date": trip.purchasing_date,
-                "carbon": trip.carbon
+                "carbon": trip.carbon,
+                "visibility": trip.visibility
             },
         )
 
@@ -180,10 +184,11 @@ def _create_trip_in_sqlite(trip: Trip):
             'price',
             'currency',
             'purchasing_date',
-            'ticket_id'
+            'ticket_id',
+            'visibility'
         ) VALUES (
             ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         ) RETURNING uid;
     """
     if trip.start_datetime is None:
@@ -227,6 +232,7 @@ def _create_trip_in_sqlite(trip: Trip):
                     trip.currency,
                     trip.purchasing_date,
                     trip.ticket_id,
+                    trip.visibility
                 ),
             )
             # Retrieve the trip_id directly from the INSERT statement
@@ -346,7 +352,8 @@ def update_trip(trip_id: int, trip: Trip, formData=None, updateCreated=False):
                 "currency": trip.currency,
                 "ticket_id": trip.ticket_id if trip.ticket_id != "" else None,
                 "purchase_date": trip.purchasing_date,
-                "carbon": trip.carbon
+                "carbon": trip.carbon,
+                "visibility": trip.visibility if trip.visibility != "" else None,
             },
         )
 
@@ -401,6 +408,12 @@ def _update_trip_in_sqlite(
         utc_start_datetime,
         utc_end_datetime,
     ) = processDates(formData, limits)
+
+    if "visibility" in formData:
+        visibility = formData["visibility"]
+    else:
+        visibility = None
+
     updateData = {
         "trip_id": tripId,
         "manual_trip_duration": manual_trip_duration,
@@ -420,7 +433,8 @@ def _update_trip_in_sqlite(
         "price": formData["price"],
         "currency": formData.get("currency") if formData["price"] != "" else None,
         "ticket_id": formData.get("ticket_id"),
-        "purchasing_date": formData.get("purchasing_date")
+        "purchasing_date": formData.get("purchasing_date"),
+        "visibility": visibility if visibility != "" else None
         if formData["price"] != ""
         else None,
     }
@@ -586,6 +600,48 @@ def attach_ticket_to_trips(username, ticket_id, trip_ids):
             for trip_id in trip_ids:
                 pg.execute(
                     attach_ticket_query(), {"trip_id": trip_id, "ticket_id": ticket_id}
+                )
+        for trip_id in trip_ids:
+            compare_trip(trip_id)
+
+        mainConn.commit()
+        return True, None
+    except Exception as e:
+        mainConn.rollback()
+        return False, str(e)
+
+def change_trips_visibility(username, visibility, trip_ids):
+    try:
+        placeholders = ", ".join(["?"] * len(trip_ids))
+
+        if visibility not in ("public", "friends", "private"):
+            abort(401)
+
+        with managed_cursor(mainConn) as cursor:
+            # Check all trip ownership
+            cursor.execute(
+                f"""
+                SELECT COUNT(*) as c FROM trip 
+                WHERE username = ? AND uid IN ({placeholders})
+                """,
+                [username] + trip_ids,
+            )
+            count = cursor.fetchone()["c"]
+            if count != len(trip_ids):
+                abort(401)
+
+            cursor.execute(
+                f"""
+                UPDATE trip SET visibility = ? 
+                WHERE username = ? AND uid IN ({placeholders})
+                """,
+                [visibility, username] + trip_ids,
+            )
+
+        with pg_session() as pg:
+            for trip_id in trip_ids:
+                pg.execute(
+                    change_visibility_query(), {"trip_id": trip_id, "visibility": visibility}
                 )
         for trip_id in trip_ids:
             compare_trip(trip_id)

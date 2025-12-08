@@ -167,6 +167,7 @@ def init_main(path):
         ("ticket_id", "INT"),
         ("currency", "TEXT"),
         ("purchasing_date", "DATETIME"),
+        ("visibility", "TEXT")
     ]
     manual_stations_columns = [
         ("uid", "INTEGER NOT NULL UNIQUE"),

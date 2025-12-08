@@ -278,11 +278,20 @@
         </group>
         <label for="lineName" class="sr-only">{{lineName}}</label>
         <input type="text" name="lineName" id="lineName" placeholder="{{lineName}}" value="{{tripLineName}}" />
+        <br class="non_poi">
 
         <fieldset>
             <legend>
                 <span class="legend">{{details}}:</span>
             </legend>
+
+            <label for="visibility">{{visibility}}</label>
+            <select name="visibility" id="visibility" class="non_poi">
+              <option value="" disabled {% if tripVisibility == "" %}selected{% endif %}>{{visibility_select}}</option>
+              <option value="public" {% if tripVisibility == "public" %}selected{% endif %}>{{visibility_public}}</option>
+              <option value="friends" {% if tripVisibility == "friends" %}selected{% endif %}>{{visibility_friends}}</option>
+              <option value="private" {% if tripVisibility == "private" %}selected{% endif %}>{{visibility_private}}</option>
+            </select>
 
             <label for="material_type">{{material_type}}</label>
             <input type="text" name="material_type" id="material_type" placeholder="{{material_type}}"

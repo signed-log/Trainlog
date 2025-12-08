@@ -57,6 +57,13 @@
       <input type="checkbox" id="detailsToggle" name="detailsToggle"/>
 
       <div id="detailsGroup">
+        <label for="visibility">{{visibility}}</label>
+        <select name="visibility" id="visibility" class="non_poi">
+          <option value="public" {% if trip_visibility == "public" %}selected{% endif %}>{{visibility_public}}</option>
+          <option value="friends" {% if trip_visibility == "friends" %}selected{% endif %}>{{visibility_friends}}</option>
+          <option value="private" {% if trip_visibility == "private" %}selected{% endif %}>{{visibility_private}}</option>
+        </select>
+
         <label for="material_type" class="sr-only">{{material_type}}</label>
         <input type="text" class="non_poi" name="material_type" id="material_type" placeholder="{{material_type}}">
         <label for="reg" class="sr-only">{{reg}}</label>

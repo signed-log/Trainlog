@@ -25,7 +25,8 @@ INSERT INTO trips (
     price,
     currency,
     ticket_id,
-    purchase_date
+    purchase_date,
+    visibility
 )
 SELECT
     :new_trip_id,
@@ -54,7 +55,8 @@ SELECT
     price,
     currency,
     ticket_id,
-    purchase_date
+    purchase_date,
+    visibility
 FROM trips
 WHERE trip_id = :trip_id
 RETURNING trip_id
