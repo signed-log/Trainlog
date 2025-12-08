@@ -1204,7 +1204,7 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationHelipadName"
         ]
-        trip_visibility="private"
+        trip_visibility="public"
 
     elif vehicle_type == "car":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
