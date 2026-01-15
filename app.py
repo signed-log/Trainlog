@@ -5546,6 +5546,15 @@ def mergeTrips(username, tripIds):
         for trip_item in sortedTripList
     )
 
+    #get new visibility
+    visibility = "public"
+    for item in sortedTripList:
+        if item["trip"]["visibility"] == "friends":
+            visibility = "friends"
+        if item["trip"]["visibility"] == 'private':
+            visibility = "private"
+            break
+
     # Use the purchasing_date from the first trip (or adjust as needed)
     newTrip["purchasing_date"] = first_trip.get("purchasing_date")
 
@@ -5567,7 +5576,7 @@ def mergeTrips(username, tripIds):
     newTrip["originManualLng"] = None
     newTrip["destinationManualLat"] = None
     newTrip["destinationManualLng"] = None
-
+    newTrip["visibility"] = visibility
 
     try:
         saveTripToDb(username, newTrip, final_path, tripType)
