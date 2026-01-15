@@ -240,12 +240,13 @@ def _create_trip_in_sqlite(trip: Trip):
 
         # Prepare the path data with the obtained trip_id
         if isinstance(trip.path, Path):
+            trip.path.set_trip_id(trip_id)
             path = trip.path
         else:
             path = Path(path=trip.path, trip_id=trip_id)
 
         # Use your existing saveQuery template for the path
-        savePathQuery = saveQuery.format(
+        save_path_query = saveQuery.format(
             table="paths",
             keys="({})".format(", ".join(path.keys())),
             values=", ".join(["?"] * len(path.keys())),
@@ -253,7 +254,7 @@ def _create_trip_in_sqlite(trip: Trip):
 
         pathConn.execute("BEGIN TRANSACTION")
         with managed_cursor(pathConn) as cursor:
-            cursor.execute(savePathQuery, path.values())
+            cursor.execute(save_path_query, path.values())
 
         # Commit both transactions
         mainConn.commit()

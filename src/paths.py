@@ -29,3 +29,7 @@ class Path:
     
     def __len__(self):
         return len(self.list)
+
+    def set_trip_id(self, trip_id):
+        for node in self.list:
+            node.trip_id = trip_id

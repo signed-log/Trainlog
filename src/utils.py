@@ -405,3 +405,20 @@ def fr24_usage(username):
         )
         row = cursor.fetchone() or (0,)
     return row[0]
+
+def get_default_trip_visibility(x):
+    match x:
+        case "accommodation": return "private"
+        case "aerialway": return "public"
+        case "bus": return "public"
+        case "car": return "private"
+        case "cycle": return "private"
+        case "ferry": return "public"
+        case "helicopter": return "public"
+        case "metro": return "public"
+        case "poi": return "private"
+        case "restaurant": return "private"
+        case "train": return "public"
+        case "tram": return "public"
+        case "walk": return "private"
+        case _: return "public"
