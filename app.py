@@ -182,6 +182,7 @@ from src.api.leaderboards import _getLeaderboardUsers
 from src.api.news import news_blueprint
 from src.api.finance import finance_blueprint
 from src.api.carbon import carbon_blueprint
+from src.api.wrapped import wrapped_blueprint
 from src.api.stats import stats_blueprint, fetch_stats, get_distinct_stat_years
 from src.consts import DbNames, TripTypes
 from src.pg import setup_db
@@ -228,8 +229,11 @@ from src.paths import Path
 from src.carbon import *
 from src.graphhopper import convert_graphhopper_to_osrm
 from src.users import User, Friendship, authDb
+from src.mail import start_email_listener
+from src.routing import forward_routing_core
 
 app = Flask(__name__)
+start_email_listener(app)
 app.config['DEBUG'] = True
 Compress(app)
 app.autoversion = True
@@ -242,6 +246,7 @@ app.register_blueprint(finance_blueprint)
 app.register_blueprint(news_blueprint)
 app.register_blueprint(carbon_blueprint)
 app.register_blueprint(stats_blueprint)
+app.register_blueprint(wrapped_blueprint)
 
 app.config["CACHE_TYPE"] = "SimpleCache"
 app.config["CACHE_DEFAULT_TIMEOUT"] = 864000
@@ -2322,24 +2327,35 @@ def new_flight(username):
     )
 
 
-@app.route("/u/<username>/routing")
+@app.route("/u/<username>/routing", methods=['GET', 'POST'])
 @login_required
 def routing(username):
+    trip_data = None
+    if request.method == 'POST':
+        trip_data = request.form.get('trip_data') or request.get_json()
+        if isinstance(trip_data, dict):
+            trip_data = json.dumps(trip_data)
     return render_template(
         "routing.html",
         username=username,
+        trip_data=trip_data,
         **lang[session["userinfo"]["lang"]],
         **session["userinfo"],
     )
 
-
-@app.route("/u/<username>/air_routing/<type>")
+@app.route("/u/<username>/air_routing/<type>", methods=['GET', 'POST'])
 @login_required
 def air_routing(username, type):
+    trip_data = None
+    if request.method == 'POST':
+        trip_data = request.form.get('trip_data') or request.get_json()
+        if isinstance(trip_data, dict):
+            trip_data = json.dumps(trip_data)
     return render_template(
         "air_routing.html",
         type=type,
         username=username,
+        trip_data=trip_data,
         **lang[session["userinfo"]["lang"]],
         **session["userinfo"],
     )
@@ -2937,7 +2953,6 @@ def editCountriesList():
 
 
 @app.route("/getGeojson/<cc>", methods=["GET"])
-@admin_required
 def get_full_geojson(cc):
     directory_path = "country_percent/countries/processed/"
 
@@ -4451,176 +4466,9 @@ def google_route_display(
         **session["userinfo"],
     )
 
-
 @app.route("/forwardRouting/<routingType>/<path:path>")
-def forwardRouting(path, routingType, args=None):
-    if routingType in ("train", "tram", "metro"):
-        routingType = "train"
-
-    radiuses = None  # initialize in case ferry needs it later
-
-    if routingType == "train":
-        # Check if using old OSRM router
-        use_new_router = request.args.get('use_new_router', 'false').lower() == 'true'
-        if use_new_router:
-            base = "https://openrailrouting.maahl.net"
-        else:
-            base = "http://routing.trainlog.me:5000"
-    elif routingType == "ferry":
-        base = "http://routing.trainlog.me:5001"
-        coord_pairs = [
-            {"lng": float(coord.split(",")[0]), "lat": float(coord.split(",")[1])}
-            for coord in path.replace("route/v1/ferry/", "").split(";")
-        ]
-        radiuses = ";".join(["10000"] * len(coord_pairs))
-    elif routingType == "aerialway":
-        base = "http://routing.trainlog.me:5003"
-    elif routingType == "car":
-        base = "https://routing.openstreetmap.de/routed-car"
-    elif routingType == "walk":
-        base = "https://routing.openstreetmap.de/routed-foot"
-    elif routingType == "cycle":
-        base = "https://routing.openstreetmap.de/routed-bike"
-    elif routingType == "bus":
-        # Router base URLs with associated HTTP status codes used to inform the frontend
-        # of which backend was used to compute the route:
-        #   231 = Trainlog router
-        #   232 = Chiel router
-        #   233 = JKimb router
-        #   234 = OSRM fallback (used directly if no match found)
-        #   235 = Custom failure code indicating a router failed, and fallback to OSRM was triggered
-        routers = {
-            "trainlog": ("http://routing.trainlog.me:5002", 231),
-            "chiel": ("https://busrouter.chiel.uk", 232),
-            "jkimb": ("https://busrouter.jkimball.dev", 233),
-            "fallback": ("https://routing.openstreetmap.de/routed-car", 234),
-        }
-
-        # Routing groups
-        routing_groups = [
-            {
-                # Nordics + British Isles + Crown Deps
-                "countries": {
-                    "NO",
-                    "SE",
-                    "FI",
-                    "DK",
-                    "GB",
-                    "IE",
-                    "IS",
-                    "IM",
-                    "FO",
-                    "GG",
-                    "JE",
-                },
-                "router": routers["trainlog"],
-            },
-            {
-                # Chiel: Central + Baltic + Western Europe
-                "countries": {
-                    "DE",
-                    "AT",
-                    "CH",
-                    "LI",
-                    "LU",  # DACH
-                    "EE",
-                    "LV",
-                    "LT",  # Baltic
-                    "FR",
-                    "BE",
-                    "NL",
-                    "AD",
-                    "MC",  # Western Europe
-                    "PL",
-                    "CZ",  # Central
-                    "IT",
-                    "ES",
-                    "PT",  # Southern
-                },
-                "router": routers["chiel"],
-            },
-            {
-                # North America
-                "countries": {"US", "CA", "GL", "MX"},
-                "router": routers["jkimb"],
-            },
-        ]
-
-        # Parse coordinates from path
-        coord_pairs = [
-            {"lng": float(coord.split(",")[0]), "lat": float(coord.split(",")[1])}
-            for coord in path.replace("route/v1/driving/", "").split(";")
-        ]
-
-        # Get country codes
-        countries = []
-        for wp in coord_pairs:
-            try:
-                countries.append(
-                    getCountryFromCoordinates(wp["lat"], wp["lng"])["countryCode"]
-                )
-            except Exception:
-                countries.append("UN")
-
-        unique_countries = set(countries)
-
-        # Determine base router
-        base, return_code = routers["fallback"]
-        for group in routing_groups:
-            if unique_countries.issubset(group["countries"]):
-                base, return_code = group["router"]
-                break
-
-    if not args:
-        args = request.query_string.decode("utf-8")
-        args = args.replace("&use_new_router=true", "").replace("use_new_router=true&", "").replace("use_new_router=true", "")
-
-    def build_url(base_url):
-        full_url = f"{base_url}/{path}?{args}"
-        if routingType == "ferry" and radiuses:
-            full_url += f"&radiuses={radiuses}"
-        return full_url
-
-    def build_gh_url(base_url):
-        coords_part = path.split('/')[-1]  # Get the coordinates part
-        
-        # Convert OSRM coordinates to GraphHopper point parameters
-        points = []
-        for coord in coords_part.split(';'):
-            lon, lat = coord.split(',')
-            points.append(f"point={lat}%2C{lon}")
-        
-        point_params = "&".join(points)
-        
-        # Build GraphHopper URL with your existing args plus the points
-        full_url = f"{base_url}/route?{point_params}&type=json&profile=all&details=electrified&details=distance"
-        
-        if routingType == "ferry" and radiuses:
-            full_url += f"&radiuses={radiuses}"
-        
-        return full_url
-
-    # Only apply try/fallback logic for BUS routing
-    if routingType == "bus":
-        try:
-            response = requests.get(build_url(base), timeout=5)
-            if response.status_code != 200:
-                raise Exception("Non-200 response")
-            data = response.json()
-            if data.get("status") == "NoRoute":
-                raise Exception("Router responded with NoRoute")
-            print(base)
-            return make_response(response.json(), return_code)
-        except Exception as e:
-            print(f"Router failed: {base}, falling back to OSRM. Reason: {e}")
-            fallback_url = build_url(routers["fallback"][0])
-            return make_response(requests.get(fallback_url).json(), 235)
-    elif routingType == "train" and use_new_router :
-        return convert_graphhopper_to_osrm(requests.get(build_gh_url(base)).json())
-    else:
-        # Other routing types: no fallback
-        print(build_url(base))
-        return requests.get(build_url(base)).text
+def forwardRouting(path, routingType):
+    return forward_routing_core(routingType=routingType, path=path, flask_request=request)
 
 
 latin_letters = {}
@@ -4820,18 +4668,21 @@ def stationAutocomplete():
     args = request.query_string.decode("utf-8")
     timeout = 2
     en = "lang=en"
-
-    primary = f"{chiel}?{args}&{en}"
-    bkp = f"{komoot}?{args}&{en}"
-
-    try:
-        responseJson = requests.get(primary, timeout=timeout).json()
-    except Exception:
+    
+    responseJson = None
+    for url in [chiel, komoot]:
         try:
-            responseJson = requests.get(bkp).json()
+            resp = requests.get(f"{url}?{args}&{en}", timeout=timeout)
+            resp.raise_for_status()
+            responseJson = resp.json()
+            if responseJson.get("features") is not None:
+                break
         except Exception:
-            return "Photon Error", 500
-
+            continue
+    
+    if responseJson is None:
+        return "Photon Error", 500
+    
     homonymy_filter = {}
 
     for index, result in enumerate(responseJson["features"]):
@@ -9229,6 +9080,19 @@ def list_routes():
                 routes.add(first_segment)
     
     return '<br>'.join(sorted(routes))
+
+@app.get("/flags/<code>.svg")
+def get_flag(code):
+    w = request.args.get("w")
+    h = request.args.get("h")
+    svg = open(f"static/images/flags/{code}.svg").read()
+    svg = re.sub(r'<svg([^>]*)>',
+                 rf'<svg\1 width="{w}" height="{h}">', svg)
+
+    resp = make_response(svg)
+    resp.mimetype = "image/svg+xml"
+    return resp
+
 
 with app.app_context():
     if not database_exists(authDb.get_engine().url):

@@ -18,12 +18,17 @@
 
 <!-- Displaying Totals Below the Chart using Bootstrap 5 cards -->
 <div class="container mt-4">
+    <div class="d-flex justify-content-center align-items-center mb-3">
+        <h4 class="me-3 mb-0">Totals for</h4>
+        <select id="yearSelect" class="form-select" style="width: auto;" onchange="updateTotalsFromDropdown()">
+        </select>
+    </div>
     <div class="row text-center">
         <div class="col-md-4 mb-3">
             <div class="card shadow-sm border-primary">
                 <div class="card-body">
                     <h5 class="card-title text-primary">Total Income</h5>
-                    <p class="card-text">{{ totals['revenue'] }} €</p>
+                    <p class="card-text" id="totalRevenue">0 €</p>
                 </div>
             </div>
         </div>
@@ -31,7 +36,7 @@
             <div class="card shadow-sm border-danger">
                 <div class="card-body">
                     <h5 class="card-title text-danger">Total Hosting Spending</h5>
-                    <p class="card-text">{{ totals['hosting_spending'] }} €</p>
+                    <p class="card-text" id="totalHosting">0 €</p>
                 </div>
             </div>
         </div>
@@ -39,7 +44,7 @@
             <div class="card shadow-sm border-danger">
                 <div class="card-body">
                     <h5 class="card-title text-danger">Total Translation Spending</h5>
-                    <p class="card-text">{{ totals['translation_spending'] }} €</p>
+                    <p class="card-text" id="totalTranslation">0 €</p>
                 </div>
             </div>
         </div>
@@ -49,7 +54,7 @@
             <div class="card shadow-sm border-danger">
                 <div class="card-body">
                     <h5 class="card-title text-danger">API Subscriptions</h5>
-                    <p class="card-text">{{ totals['api_subscription_spending'] }} €</p>
+                    <p class="card-text" id="totalApi">0 €</p>
                 </div>
             </div>
         </div>
@@ -57,29 +62,15 @@
             <div class="card shadow-sm border-danger">
                 <div class="card-body">
                     <h5 class="card-title text-danger">Total Spending</h5>
-                    <p class="card-text">{{ totals['total_spending'] }} €</p>
+                    <p class="card-text" id="totalSpending">0 €</p>
                 </div>
             </div>
         </div>
         <div class="col-md-4 mb-3">
-            <div class="card shadow-sm 
-                {% if totals['profit'] >= 0 %}
-                    border-success
-                {% else %}
-                    border-danger
-                {% endif %}
-            ">
+            <div class="card shadow-sm" id="profitCard">
                 <div class="card-body">
-                    <h5 class="card-title 
-                        {% if totals['profit'] >= 0 %}
-                            text-success
-                        {% else %}
-                            text-danger
-                        {% endif %}
-                    ">
-                        Net Result
-                    </h5>
-                    <p class="card-text">{{ totals['profit'] }} €</p>
+                    <h5 class="card-title" id="profitTitle">Net Result</h5>
+                    <p class="card-text" id="totalProfit">0 €</p>
                 </div>
             </div>
         </div>
@@ -104,46 +95,103 @@
     var totalSpendingDataPoints = {{ total_spending_data_points | tojson }};
     var profitDataPoints = {{ profit_data_points | tojson }};
     
-    // Outstanding info for visual indicators
     var outstandingInfo = {{ outstanding_info | tojson if outstanding_info else 'null' }};
     
-    // Calculate cumulative profit
+    // Get unique years and populate dropdown
+    var years = [...new Set(labels.map(l => l.substring(0, 4)))].sort();
+    var yearSelect = document.getElementById('yearSelect');
+    
+    // Add "All Time" option
+    var allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = 'All Time';
+    yearSelect.appendChild(allOption);
+    
+    // Add year options
+    years.forEach(year => {
+        var option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    });
+    
+    // Set current year as default
+    var currentYearStr = new Date().getFullYear().toString();
+    if (years.includes(currentYearStr)) {
+        yearSelect.value = currentYearStr;
+    } else {
+        yearSelect.value = 'all';
+    }
+    
+    // Calculate cumulative profit per year (resets each January)
+    // Use null to break the line between December and January
     var cumulativeProfitDataPoints = [];
-    profitDataPoints.reduce((acc, current, index) => {
-        acc += current;
-        cumulativeProfitDataPoints[index] = acc;
-        return acc;
-    }, 0);
+    var yearlyAccumulator = 0;
+    var currentYear = null;
+    
+    labels.forEach((label, index) => {
+        var year = label.substring(0, 4);
+        if (year !== currentYear) {
+            // Insert null at previous index to break line (except for first year)
+            if (currentYear !== null && index > 0) {
+                cumulativeProfitDataPoints[index - 1] = [labels[index - 1], cumulativeProfitDataPoints[index - 1][1], true]; // mark as year end
+            }
+            yearlyAccumulator = 0;
+            currentYear = year;
+        }
+        yearlyAccumulator += profitDataPoints[index];
+        cumulativeProfitDataPoints[index] = [labels[index], yearlyAccumulator, false];
+    });
 
-    // Find the indices for the default zoom range
+    // Find the indices for the default zoom range (current year)
+    var startIndex = labels.findIndex(l => l.startsWith(currentYearStr));
+    if (startIndex === -1) startIndex = Math.max(0, labels.length - 12);
     var endIndex = labels.length - 1;
-    var startIndex = endIndex - 11;
+
+    // Function to update totals based on selected year
+    function updateTotalsFromDropdown() {
+        var selectedYear = document.getElementById('yearSelect').value;
+        var revenue = 0, hosting = 0, translation = 0, api = 0;
+        
+        labels.forEach((label, i) => {
+            if (selectedYear === 'all' || label.startsWith(selectedYear)) {
+                revenue += revenueDataPoints[i];
+                hosting += hostingSpendingDataPoints[i];
+                translation += translationSpendingDataPoints[i];
+                api += apiSubscriptionSpendingDataPoints[i];
+            }
+        });
+        
+        var spending = hosting + translation + api;
+        var profit = revenue + spending;
+        
+        document.getElementById('totalRevenue').textContent = Math.round(revenue) + ' €';
+        document.getElementById('totalHosting').textContent = Math.round(-hosting) + ' €';
+        document.getElementById('totalTranslation').textContent = Math.round(-translation) + ' €';
+        document.getElementById('totalApi').textContent = Math.round(-api) + ' €';
+        document.getElementById('totalSpending').textContent = Math.round(-spending) + ' €';
+        document.getElementById('totalProfit').textContent = Math.round(profit) + ' €';
+        
+        var card = document.getElementById('profitCard');
+        var title = document.getElementById('profitTitle');
+        card.className = 'card shadow-sm ' + (profit >= 0 ? 'border-success' : 'border-danger');
+        title.className = 'card-title ' + (profit >= 0 ? 'text-success' : 'text-danger');
+    }
 
     // Create series data with outstanding indicators (lighter shade for pending revenue)
     var revenueSeriesData = revenueDataPoints.map((value, index) => {
         var item = { value: value };
         
-        // Add visual indicator for months with outstanding revenue (lighter green)
         if (outstandingInfo && outstandingInfo.next_payout_date && outstandingInfo.total_pending > 0) {
-            var payoutMonth = outstandingInfo.next_payout_date.substr(0, 7); // Extract YYYY-MM
+            var payoutMonth = outstandingInfo.next_payout_date.substr(0, 7);
             if (labels[index] === payoutMonth) {
-                // Calculate the portion that is outstanding vs already received
                 var baseRevenue = value - outstandingInfo.total_pending;
-                
-                // Split the bar into two parts: received (dark green) + pending (light green)
                 return [
-                    {
-                        value: baseRevenue,
-                        itemStyle: { color: '#4CAF50' } // Normal green for received revenue
-                    },
-                    {
-                        value: outstandingInfo.total_pending,
-                        itemStyle: { color: '#81C784' } // Light green for pending revenue
-                    }
+                    { value: baseRevenue, itemStyle: { color: '#4CAF50' } },
+                    { value: outstandingInfo.total_pending, itemStyle: { color: '#81C784' } }
                 ];
             }
         }
-        
         return item;
     });
 
@@ -153,15 +201,57 @@
     
     revenueSeriesData.forEach((item, index) => {
         if (Array.isArray(item)) {
-            // Month with both received and pending revenue
             receivedRevenueData.push(item[0].value);
             pendingRevenueData.push(item[1].value);
         } else {
-            // Month with only received revenue
             receivedRevenueData.push(item.value);
             pendingRevenueData.push(0);
         }
     });
+
+    // Build cumulative data with breaks between years
+    var cumulativeSeriesData = [];
+    var currentYearData = [];
+    var prevYear = null;
+    
+    labels.forEach((label, index) => {
+        var year = label.substring(0, 4);
+        if (prevYear !== null && year !== prevYear) {
+            // Push current year's data and start new segment
+            cumulativeSeriesData.push(currentYearData);
+            currentYearData = [];
+        }
+        currentYearData.push([label, cumulativeProfitDataPoints[index][1]]);
+        prevYear = year;
+    });
+    // Push last year's data
+    if (currentYearData.length > 0) {
+        cumulativeSeriesData.push(currentYearData);
+    }
+
+    // Create separate series for each year segment
+    var cumulativeSeries = cumulativeSeriesData.map((yearData, idx) => ({
+        name: idx === 0 ? 'Yearly Cumulative' : '',
+        type: 'line',
+        data: yearData,
+        itemStyle: {
+            color: '#2196F3',
+            shadowBlur: 1,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+        },
+        lineStyle: {
+            width: 2,
+            type: 'dashed'
+        },
+        emphasis: {
+            itemStyle: {
+                color: '#1976D2'
+            }
+        },
+        smooth: true,
+        showSymbol: true,
+        legendHoverLink: idx === 0
+    }));
 
     var option = {
         tooltip: {
@@ -175,7 +265,6 @@
             formatter: function (params) {
                 var tooltipText = `<strong>${params[0].axisValue}</strong><br>`;
                 
-                // Group revenue items
                 var totalIncome = 0;
                 var pendingIncome = 0;
                 var otherItems = [];
@@ -191,7 +280,6 @@
                     }
                 });
                 
-                // Show combined income with breakdown if there's pending
                 if (pendingIncome > 0) {
                     tooltipText += `<span style="color:#4CAF50">●</span> Total Income: ${totalIncome.toFixed(2)} €<br>`;
                     tooltipText += `&nbsp;&nbsp;<span style="color:#81C784">○</span> <em>Pending: ${pendingIncome.toFixed(2)} €</em><br>`;
@@ -199,16 +287,16 @@
                     tooltipText += `<span style="color:#4CAF50">●</span> Income: ${totalIncome.toFixed(2)} €<br>`;
                 }
                 
-                // Show other items
                 otherItems.forEach(function (param) {
-                    tooltipText += `${param.marker} ${param.seriesName}: ${param.value.toFixed(2)} €<br>`;
+                    var value = Array.isArray(param.value) ? param.value[1] : param.value;
+                    tooltipText += `${param.marker} ${param.seriesName || 'Yearly Cumulative'}: ${value.toFixed(2)} €<br>`;
                 });
                 
                 return tooltipText;
             }
         },
         legend: {
-            data: ['Received Income', 'Pending Income', 'Hosting Spending', 'Translation Spending', 'API Subscriptions', 'Net Result', 'Cumulative Profit'],
+            data: ['Received Income', 'Pending Income', 'Hosting Spending', 'Translation Spending', 'API Subscriptions', 'Net Result', 'Yearly Cumulative'],
             top: 10,
             textStyle: {
                 color: '#333',
@@ -272,7 +360,7 @@
                 stack: 'Income',
                 data: receivedRevenueData,
                 itemStyle: {
-                    color: '#4CAF50', // Normal green
+                    color: '#4CAF50',
                     shadowBlur: 1,
                     shadowColor: 'rgba(0, 0, 0, 0.5)'
                 },
@@ -289,7 +377,7 @@
                 stack: 'Income',
                 data: pendingRevenueData,
                 itemStyle: {
-                    color: '#81C784', // Light green for pending
+                    color: '#81C784',
                     shadowBlur: 1,
                     shadowColor: 'rgba(0, 0, 0, 0.5)'
                 },
@@ -370,34 +458,18 @@
                 },
                 smooth: true
             },
-            {
-                name: 'Cumulative Profit',
-                type: 'line',
-                data: cumulativeProfitDataPoints,
-                itemStyle: {
-                    color: '#2196F3',
-                    shadowBlur: 1,
-                    shadowColor: 'rgba(0, 0, 0, 0.5)'
-                },
-                lineStyle: {
-                    width: 2,
-                    type: 'dashed'
-                },
-                emphasis: {
-                    itemStyle: {
-                        color: '#1976D2'
-                    }
-                },
-                smooth: true
-            }
+            ...cumulativeSeries
         ]
     };
 
     myChart.setOption(option);
+    
+    // Initial totals update
+    updateTotalsFromDropdown();
 
     function exportData() {
         let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Date,Income,Hosting Spending,Translation Spending,API Subscriptions,Net Result,Cumulative Profit\n";
+        csvContent += "Date,Income,Hosting Spending,Translation Spending,API Subscriptions,Net Result,Yearly Cumulative\n";
         labels.forEach((label, index) => {
             let row = [
                 label,
@@ -406,7 +478,7 @@
                 translationSpendingDataPoints[index],
                 apiSubscriptionSpendingDataPoints[index],
                 profitDataPoints[index],
-                cumulativeProfitDataPoints[index]
+                cumulativeProfitDataPoints[index][1]
             ].join(",");
             csvContent += row + "\n";
         });

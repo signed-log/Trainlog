@@ -147,7 +147,7 @@
       </li>
       <li class="nav-item dropdown">
         <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="#" role="button" aria-expanded="false">
-          <i class="bi bi-three-dots"></i> {{tools}}
+          <i class="bi bi-three-dots"></i> {{tools}}{{friendsIcon | safe}}
         </a>
         <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
           <!-- Tickets Section -->
@@ -179,9 +179,10 @@
           <div class="dropdown-divider"></div>
           <a class="dropdown-item" href="{{ url_for('live_map') }}"><i class="fa-solid fa-globe"></i> {{ live_map }}</a>
           <a class="dropdown-item" href="{{ url_for('user_bounds', username=username) }}"><i class="fa-solid fa-arrows-to-circle"></i> {{ travel_bounds_header }}</a>
+          <a class="dropdown-item" href="{{ url_for('friends', username=username) }}"><i class="bi bi-people"></i>{{friendsIcon | safe}} {{friends}}</a>
           {% if is_alpha %}
           <div class="dropdown-divider"></div>
-          <!-- GPX Section -->
+          <!-- Automated Routers Section -->
           <h6 class="dropdown-header">{{automatedRouters}}</h6>
             <a class="dropdown-item" href="{{ url_for('new_auto', username=username, type='here') }}"><i class="fa-solid fa-caret-down"></i> Autorouting (Here)α</a>
             <a class="dropdown-item" href="{{ url_for('new_auto', username=username, type='google') }}"><i class="fa-brands fa-google"></i> Autorouting (Google)α</a>
@@ -190,7 +191,8 @@
       </li>
       <li class="nav-item">
         <a class="nav-link" href="{{ url_for('leaderboard') }}"><i class="bi bi-trophy"></i> {{leaderboard}}</a>
-        <li class="nav-item dropdown">
+      </li>
+      <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-bar-chart-line"></i> {{ stats }}
           </a>
@@ -204,12 +206,18 @@
             {% endfor %}
           </ul>
         </li>
-      <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('friends', username=username) }}"><i class="bi bi-people"></i>{{friendsIcon | safe}} {{friends}}</a>
-      </li>
         <li  class="nav-item tripCurrent">
           <a class="nav-link" href="{{ url_for('current', username=username) }}"><i class="bi bi-broadcast"></i> {{current}}</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('wrapped.wrapped', username=username) }}">
+            <span class="gift-wrap">
+              <span class="gift-lid">🎁</span>
+              <span class="gift-open">🎉</span>
+            </span>
+            Trainlog {{wrapped_title}}
+          </a>
+      </li>
       </ul>
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
@@ -266,6 +274,32 @@
     max-height: 320px;
     overflow-y: auto;
 }
+
+.gift-wrap {
+  display: inline-block;
+  position: relative;
+  width: 1em;
+  height: 1em;
+  top:-4px
+}
+.gift-lid, .gift-open {
+  position: absolute;
+  left: 0;
+  transition: all 0.3s ease;
+}
+.gift-open {
+  opacity: 0;
+  transform: scale(0.5);
+}
+.nav-link:hover .gift-lid {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.nav-link:hover .gift-open {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
 </style>
 
 <script type="text/javascript">

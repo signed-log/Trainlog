@@ -18,7 +18,21 @@ let useFR24 = true;
 let fr24PathCache = null;
 
 const id = getGetParams().get("id");
-const newTrip = JSON.parse(sessionStorage.getItem(id));
+let newTrip = null;
+
+{% if trip_data %}
+newTrip = {{ trip_data | safe }};
+{% endif %}
+if (!newTrip && id) {
+    newTrip = JSON.parse(sessionStorage.getItem(id));
+}
+
+if (!newTrip) {
+    document.getElementById('sidebar-content').innerHTML = '<h4>Error: No trip data provided</h4>';
+    throw new Error('No trip data');
+}
+
+console.log(newTrip);
 console.log(newTrip);
 
 let origCoord = newTrip.originStation?.[0] ?? [0, 0];

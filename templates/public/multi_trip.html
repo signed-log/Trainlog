@@ -1,267 +1,587 @@
 {% extends "layout.html" %}
 {% block content %}
+<link href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+    background: #1a1d28;
+}
 
-<div class="spinner-container"><div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>
+#canvas-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+}
 
+.maplibregl-marker {
+    z-index: 2 !important;
+}
 
-<div id="map" class="mapIndiv">
+.spinner-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.spinner-container .lds-spinner {
+    position: relative;
+    top: 0;
+}
+
+#user-sidebar {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    z-index: 1000;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    min-width: 150px;
+}
+
+#user-sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    cursor: pointer;
+    user-select: none;
+}
+
+#user-sidebar-header h4 {
+    margin: 0;
+    font-size: 14px;
+    color: #333;
+}
+
+#user-sidebar-header .toggle-icon {
+    font-size: 12px;
+    color: #666;
+    transition: transform 0.2s;
+}
+
+#user-sidebar.collapsed #user-sidebar-header .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+#user-list-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border-top: 1px solid #ddd;
+    padding: 8px 12px;
+}
+
+#user-sidebar.collapsed #user-list-container {
+    display: none;
+}
+
+.user-item {
+    display: flex;
+    align-items: center;
+    padding: 5px 0;
+    cursor: pointer;
+}
+
+.user-item:hover {
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+.user-color-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    border: 1px solid rgba(0,0,0,0.2);
+}
+
+.user-name {
+    font-size: 13px;
+    color: #333;
+}
+
+#time-slider-container {
+    position: absolute;
+    width: 90%;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+}
+
+#time-slider {
+    width: 100%;
+}
+
+#current-time-display {
+    margin-top: 10px;
+    text-align: center;
+    color: #555;
+    font-size: 16px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 5px 10px;
+    border-radius: 8px;
+}
+
+.maplibregl-popup-content {
+    font-size: 14px;
+    color: #333;
+    padding: 10px;
+}
+</style>
+
+<div class="spinner-container">
+    <div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
 </div>
 
-<div id="time-slider-container" style="position: absolute; width:90%; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 1000;">
-    <input type="range" id="time-slider" min="0" max="100" value="0" oninput="updateMapByTime(this.value)" style="width: 100%;">
-    <!-- Display for current time and date with background -->
-    <div id="current-time-display" style="margin-top: 10px; text-align: center; color: #555; font-size: 16px; background-color: rgba(255, 255, 255, 0.8); padding: 5px 10px; border-radius: 8px;">
-        Current Time: <span id="time-display">-</span>
+<div id="map" class="mapIndiv"></div>
+<canvas id="canvas-overlay"></canvas>
+
+<div id="user-sidebar">
+    <div id="user-sidebar-header" onclick="toggleSidebar()">
+        <h4>Users</h4>
+        <span class="toggle-icon">▼</span>
+    </div>
+    <div id="user-list-container">
+        <div id="user-list"></div>
     </div>
 </div>
 
+<div id="time-slider-container">
+    <input type="range" id="time-slider" min="0" max="100" value="0" oninput="updateMapByTime(this.value)">
+    <div id="current-time-display">Current Time: <span id="time-display">-</span></div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js"></script>
+<script src="{{ url_for('static', filename='js/maplibre-utils.js') }}"></script>
 
 <script>
+let map;
+let tripsData = [];
+let coloursData = {};
+let userMarkers = {};
+let multiMarkers = [];
+let minTimestamp, maxTimestamp;
+let canvas, ctx;
+let currentTime = 0;
 
+// Track trip states: 0 = not started, 1 = in progress, 2 = completed
+let tripStates = [];
+let completedFeatures = [];
+let completedSource = null;
 
-var userMarkers = {};
-var multiMarkers = {};
-
-function getPopupContent(uid, origin_station, destination_station, start_date, start_time, end_time, username) {
-  var popupContent = `
-    <div style="font-size: 14px; color: #333;">
-      <strong>${username}</strong>
-      <p>${origin_station} - ${destination_station}<br>
-      Date: ${start_date}<br>
-      Time: ${start_time} - ${end_time}</p>
-    </div>`;
-  return popupContent;
-}
-
-
-var map = createMap(null, center=null);
-var minTimestamp, maxTimestamp;
-
-function initializeSlider() {
-    var timestamps = [];
-    window.tripGroup.eachLayer(function(layer) {
-      if (layer.startTimestamp !== 0 && layer.endTimestamp !== 0) {
-          timestamps.push(layer.startTimestamp);
-          timestamps.push(layer.endTimestamp);
-      }
+async function initialize() {
+    map = await MapLibreUtils.initializeMapLibre({
+        container: 'map',
+        tileserver: 'osm',
+        useGlobe: false,
+        center: [0, 30],
+        zoom: 2
     });
 
-    minTimestamp = Math.min(...timestamps);
-    maxTimestamp = Math.max(...timestamps);
+    canvas = document.getElementById('canvas-overlay');
+    ctx = canvas.getContext('2d');
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
-    // Setup slider
-    var slider = document.getElementById('time-slider');
-    slider.min = minTimestamp;
-    slider.max = maxTimestamp;
-    slider.value = minTimestamp;
-    slider.step = (maxTimestamp - minTimestamp) / 1000; // Adjust granularity as needed
+    if (map.isStyleLoaded()) {
+        loadTrips();
+    } else {
+        map.once('load', loadTrips);
+    }
+
+    // Only redraw canvas for active trips during map movement
+    map.on('move', drawActiveTrips);
+    map.on('moveend', drawActiveTrips);
+    map.on('resize', () => { resizeCanvas(); drawActiveTrips(); });
 }
+
+function resizeCanvas() {
+    canvas.width = map.getCanvas().width;
+    canvas.height = map.getCanvas().height;
+    canvas.style.width = map.getCanvas().style.width;
+    canvas.style.height = map.getCanvas().style.height;
+}
+
+function loadTrips() {
+    $.get('{{url_for("getMultiTrips", tripIds=tripIds)}}', function(data) {
+        tripsData = data[0].reverse();
+        coloursData = data[2];
+        processTrips();
+        $('.spinner-container').hide();
+    });
+}
+
+function getPopupContent(username, origin, destination, date, startTime, endTime) {
+    return `<strong>${username}</strong><br>${origin} - ${destination}<br>Date: ${date}<br>Time: ${startTime} - ${endTime}`;
+}
+
+function getUserColor(username) {
+    if (coloursData[username]) {
+        const c = coloursData[username];
+        return `rgb(${Math.round(c[0] * 255)},${Math.round(c[1] * 255)},${Math.round(c[2] * 255)})`;
+    }
+    return 'rgb(255,255,255)';
+}
+
+window.tripMetas = [];
+
+function processTrips() {
+    const timestamps = [];
+    const bounds = new maplibregl.LngLatBounds();
+
+    tripsData.forEach((tripData, index) => {
+        const trip = tripData.trip;
+        const path = tripData.path;
+        const color = getUserColor(trip.username);
+
+        let coords;
+        if (trip.type === 'air' && path.length === 2) {
+            coords = MapLibreUtils.createGeodesicLine([path[0][1], path[0][0]], [path[1][1], path[1][0]]);
+        } else {
+            coords = path.map(c => [c[1], c[0]]);
+        }
+
+        const startTs = new Date(trip.utc_start_datetime).getTime();
+        const endTs = new Date(trip.utc_end_datetime).getTime();
+
+        if (startTs && endTs) {
+            timestamps.push(startTs, endTs);
+        }
+
+        coords.forEach(c => bounds.extend(c));
+
+        window.tripMetas.push({
+            index,
+            coords,
+            startTs,
+            endTs,
+            username: trip.username,
+            color,
+            type: trip.type,
+            origin: trip.origin_station,
+            destination: trip.destination_station,
+            date: trip.start_date,
+            startTime: trip.start_time,
+            endTime: trip.end_time
+        });
+
+        tripStates.push(0);
+
+        completedFeatures.push({
+            type: 'Feature',
+            geometry: { type: 'LineString', coordinates: [] },
+            properties: { color, type: trip.type, username: trip.username }
+        });
+
+        if (!userMarkers[trip.username]) {
+            const el = document.createElement('div');
+            el.style.cssText = `background-color: ${color}; width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; cursor: pointer;`;
+            
+            const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+                .setLngLat(coords[0])
+                .setPopup(new maplibregl.Popup({ offset: 10 }).setText(trip.username))
+                .addTo(map);
+            
+            userMarkers[trip.username] = { marker, color, el };
+        }
+    });
+
+    // MapLibre layers for completed trips (static, GPU-accelerated)
+    map.addSource('completed-trips', {
+        type: 'geojson',
+        data: { type: 'FeatureCollection', features: completedFeatures }
+    });
+
+    map.addLayer({
+        id: 'completed-shadow',
+        type: 'line',
+        source: 'completed-trips',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+            'line-color': '#000000',
+            'line-width': ['case', ['==', ['get', 'type'], 'air'], 4, 7],
+            'line-opacity': 0.6
+        }
+    });
+
+    map.addLayer({
+        id: 'completed-lines',
+        type: 'line',
+        source: 'completed-trips',
+        layout: { 'line-join': 'round', 'line-cap': 'round' },
+        paint: {
+            'line-color': ['get', 'color'],
+            'line-width': ['case', ['==', ['get', 'type'], 'air'], 1, 3],
+            'line-opacity': 0.8
+        }
+    });
+
+    completedSource = map.getSource('completed-trips');
+
+    map.fitBounds(bounds, { padding: 50 });
+
+    if (timestamps.length > 0) {
+        minTimestamp = Math.min(...timestamps);
+        maxTimestamp = Math.max(...timestamps);
+        const slider = document.getElementById('time-slider');
+        slider.min = minTimestamp;
+        slider.max = maxTimestamp;
+        slider.value = minTimestamp;
+        slider.step = (maxTimestamp - minTimestamp) / 1000;
+        currentTime = minTimestamp;
+    }
+
+    buildUserSidebar();
+}
+
+function projectToCanvas(lngLat) {
+    const point = map.project(lngLat);
+    const ratio = window.devicePixelRatio || 1;
+    return [point.x * ratio, point.y * ratio];
+}
+
+// Only draws in-progress trips on canvas (few trips = fast)
+function drawActiveTrips() {
+    const ratio = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const metas = window.tripMetas;
+    
+    for (let i = 0; i < metas.length; i++) {
+        if (tripStates[i] !== 1) continue;
+        
+        const meta = metas[i];
+        const coords = meta.coords;
+        const startTs = meta.startTs;
+        const endTs = meta.endTs;
+        const pathLength = coords.length;
+
+        const progress = (currentTime - startTs) / (endTs - startTs);
+        const exactIndex = progress * (pathLength - 1);
+        const lowerIndex = Math.floor(exactIndex);
+        const upperIndex = Math.min(Math.ceil(exactIndex), pathLength - 1);
+        const fraction = exactIndex - lowerIndex;
+
+        const visibleCoords = coords.slice(0, upperIndex + 1);
+        if (lowerIndex < pathLength - 1) {
+            const p1 = coords[lowerIndex];
+            const p2 = coords[lowerIndex + 1];
+            visibleCoords[visibleCoords.length - 1] = [
+                p1[0] + (p2[0] - p1[0]) * fraction,
+                p1[1] + (p2[1] - p1[1]) * fraction
+            ];
+        }
+
+        if (visibleCoords.length < 2) continue;
+
+        const projected = visibleCoords.map(c => projectToCanvas(c));
+
+        // Shadow
+        ctx.beginPath();
+        ctx.moveTo(projected[0][0], projected[0][1]);
+        for (let j = 1; j < projected.length; j++) {
+            ctx.lineTo(projected[j][0], projected[j][1]);
+        }
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.lineWidth = (meta.type === 'air' ? 4 : 7) * ratio;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.stroke();
+
+        // Line
+        ctx.beginPath();
+        ctx.moveTo(projected[0][0], projected[0][1]);
+        for (let j = 1; j < projected.length; j++) {
+            ctx.lineTo(projected[j][0], projected[j][1]);
+        }
+        ctx.strokeStyle = meta.color;
+        ctx.lineWidth = (meta.type === 'air' ? 1 : 3) * ratio;
+        ctx.stroke();
+    }
+}
+
+function toggleSidebar() {
+    document.getElementById('user-sidebar').classList.toggle('collapsed');
+}
+
+function buildUserSidebar() {
+    const userList = document.getElementById('user-list');
+    userList.innerHTML = '';
+    
+    Object.keys(userMarkers).sort().forEach(username => {
+        const color = userMarkers[username].color;
+        const item = document.createElement('div');
+        item.className = 'user-item';
+        item.innerHTML = `<div class="user-color-dot" style="background-color: ${color};"></div><span class="user-name">${username}</span>`;
+        item.onclick = () => {
+            const lngLat = userMarkers[username].marker.getLngLat();
+            map.flyTo({ center: lngLat, zoom: 8 });
+            userMarkers[username].marker.togglePopup();
+        };
+        userList.appendChild(item);
+    });
+}
+
+let pendingUpdate = null;
 
 function updateMapByTime(value) {
-    var currentTime = parseInt(value);
-    document.getElementById('current-time-display').innerHTML = new Date(currentTime).toLocaleString();
+    if (pendingUpdate) cancelAnimationFrame(pendingUpdate);
+    pendingUpdate = requestAnimationFrame(() => doUpdateMap(value));
+}
 
-    // Remove existing pie markers and reset user markers to visible
-    Object.keys(multiMarkers).forEach(function(username) {
-        map.removeLayer(multiMarkers[username]); // Remove pie marker from map
-    });
-    multiMarkers = {}; // Reset multiMarkers object
+function doUpdateMap(value) {
+    currentTime = parseInt(value);
+    document.getElementById('current-time-display').textContent = 'Current Time: ' + new Date(currentTime).toLocaleString();
 
-    Object.keys(userMarkers).forEach(function(username) {
-        userMarkers[username].setOpacity(1); // Reset opacity to make all markers visible
-        userMarkers[username].on('click', () => userMarkers[username].openPopup()); // Reset opacity to make all markers visible
-    });
+    for (let i = 0; i < multiMarkers.length; i++) {
+        multiMarkers[i].remove();
+    }
+    multiMarkers.length = 0;
 
-    window.tripGroup.eachLayer(function(layer) {
-        if (currentTime >= layer.startTimestamp && currentTime <= layer.endTimestamp) {
-            var duration = layer.endTimestamp - layer.startTimestamp;
-            var progress = (currentTime - layer.startTimestamp) / duration;
-            var pathLength = layer.originalLatLngs.length;
-            var visibleLength = Math.floor(pathLength * progress);
-            layer.setLatLngs(layer.originalLatLngs.slice(0, visibleLength + 1));
+    const userPositions = {};
+    const metas = window.tripMetas;
+    let completedChanged = false;
 
-            var currentUserMarker = userMarkers[layer.trip.username];
-            if (currentUserMarker) {
-                currentUserMarker.setLatLng(layer.originalLatLngs[Math.min(visibleLength, pathLength - 1)]);
+    for (let i = 0; i < metas.length; i++) {
+        const meta = metas[i];
+        const coords = meta.coords;
+        const startTs = meta.startTs;
+        const endTs = meta.endTs;
+        const pathLength = coords.length;
+        const prevState = tripStates[i];
+
+        if (currentTime < startTs) {
+            if (prevState !== 0) {
+                tripStates[i] = 0;
+                completedFeatures[i].geometry.coordinates = [];
+                completedChanged = true;
             }
-        } else if (currentTime < layer.startTimestamp) {
-            layer.setLatLngs([]);
-        } else if (currentTime > layer.endTimestamp) {
-            layer.setLatLngs(layer.originalLatLngs);
-            var currentUserMarker = userMarkers[layer.trip.username];
-            if (currentUserMarker) {
-                currentUserMarker.setLatLng(layer.originalLatLngs[layer.originalLatLngs.length - 1]);
+        } else if (currentTime > endTs) {
+            userPositions[meta.username] = coords[pathLength - 1];
+            if (prevState !== 2) {
+                tripStates[i] = 2;
+                completedFeatures[i].geometry.coordinates = coords;
+                completedChanged = true;
             }
+        } else {
+            if (prevState === 2) {
+                completedFeatures[i].geometry.coordinates = [];
+                completedChanged = true;
+            }
+            tripStates[i] = 1;
+            
+            const progress = (currentTime - startTs) / (endTs - startTs);
+            const exactIndex = progress * (pathLength - 1);
+            const lowerIndex = Math.floor(exactIndex);
+            const fraction = exactIndex - lowerIndex;
+            const p1 = coords[lowerIndex];
+            const p2 = coords[Math.min(lowerIndex + 1, pathLength - 1)];
+            userPositions[meta.username] = [
+                p1[0] + (p2[0] - p1[0]) * fraction,
+                p1[1] + (p2[1] - p1[1]) * fraction
+            ];
         }
-    });
+    }
 
-    // Initialize a dictionary to keep track of groups
-    let groups = {};
+    if (completedChanged) {
+        completedSource.setData({ type: 'FeatureCollection', features: completedFeatures });
+    }
 
-    Object.keys(userMarkers).forEach(function(username1, index, array) {
-        var marker1 = userMarkers[username1];
-        if (!marker1) return;  // Skip if the marker does not exist
+    drawActiveTrips();
 
-        array.slice(index + 1).forEach(function(username2) {
-            var marker2 = userMarkers[username2];
-            if (marker2 && marker1.getLatLng().distanceTo(marker2.getLatLng()) < 2000) {
-                // Hide the original markers
-                marker1.setOpacity(0);
-                marker2.setOpacity(0);
-                marker1.off('click');
-                marker2.off('click');
+    const usernames = Object.keys(userMarkers);
+    for (let i = 0; i < usernames.length; i++) {
+        const username = usernames[i];
+        const pos = userPositions[username];
+        const marker = userMarkers[username];
+        if (pos) {
+            marker.marker.setLngLat(pos);
+            marker.el.style.opacity = '1';
+            marker.marker.getElement().style.pointerEvents = 'auto';
+        }
+    }
 
-
-                // Group the markers
+    const posUsernames = Object.keys(userPositions);
+    const groups = {};
+    
+    for (let i = 0; i < posUsernames.length; i++) {
+        const u1 = posUsernames[i];
+        const p1 = userPositions[u1];
+        
+        for (let j = i + 1; j < posUsernames.length; j++) {
+            const u2 = posUsernames[j];
+            const p2 = userPositions[u2];
+            
+            const dx = p1[0] - p2[0];
+            const dy = p1[1] - p2[1];
+            if (dx * dx + dy * dy < 0.0004) {
                 let found = false;
-                Object.keys(groups).forEach(function(group) {
-                    if (groups[group].includes(username1) || groups[group].includes(username2)) {
-                        groups[group].push(username1, username2);
-                        groups[group] = [...new Set(groups[group])];  // Ensure unique usernames
+                for (const g in groups) {
+                    if (groups[g].includes(u1) || groups[g].includes(u2)) {
+                        if (!groups[g].includes(u1)) groups[g].push(u1);
+                        if (!groups[g].includes(u2)) groups[g].push(u2);
                         found = true;
+                        break;
                     }
-                });
-                if (!found) {
-                    let newGroupKey = `${username1}_${username2}`;
-                    groups[newGroupKey] = [username1, username2];
                 }
+                if (!found) groups[`${u1}_${u2}`] = [u1, u2];
             }
-        });
-    });
-
-    // Create pie-style markers for each group
-    Object.values(groups).forEach(group => {
-        if (group.length > 0) {
-            let colors = group.map(username => {
-                return userMarkers[username].options.icon.options.html.match(/background-color: ([^;]+);/)[1];
-            });
-            let usernamesString = group.join(', ');
-            let latLng = userMarkers[group[0]].getLatLng();  // Position of the first marker in the group
-            let pieIconHtml = createPieIcon(colors);
-            
-            let pieIcon = L.divIcon({
-                html: pieIconHtml,
-                className: 'user-custom-icon',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10],
-                popupAnchor: [0, -10]
-            });
-
-            let pieMarker = L.marker(latLng, {icon: pieIcon}).bindPopup(`Users: ${usernamesString}`);
-            pieMarker.addTo(map);
-            multiMarkers[group.join('_')] = pieMarker; // Store the new marker in multiMarkers for later removal
         }
-    });
-}
-
-
-function createPieIcon(colors) {
-    const pieSize = 20; // Size of the SVG
-    let svgStart = `<svg width="${pieSize}" height="${pieSize}" viewBox="0 0 20 20">`;
-    let svgEnd = '</svg>';
-    const center = 10; // Center x and y (since viewBox is 20)
-    let paths = [];
-    let angleIncrement = 2 * Math.PI / colors.length;
-
-    for (let i = 0; i < colors.length; i++) {
-        // Calculate the start and end points for each segment
-        let angleStart = angleIncrement * i - Math.PI / 2; // Start angle adjusted by -90 degrees to align vertically
-        let angleEnd = angleStart + angleIncrement; // End angle for this segment
-
-        // Calculate the coordinates for the points on the circle
-        let x1 = center + center * Math.cos(angleStart); // Start x
-        let y1 = center + center * Math.sin(angleStart); // Start y
-        let x2 = center + center * Math.cos(angleEnd); // End x
-        let y2 = center + center * Math.sin(angleEnd); // End y
-
-        // Define the large-arc-flag (0 for small angles, 1 for larger than 180 degrees)
-        let largeArc = (angleIncrement > Math.PI) ? 1 : 0;
-
-        // Create path description for the current segment
-        let pathD = `M${center},${center} L${x1},${y1} A${center},${center} 0 ${largeArc},1 ${x2},${y2} Z`;
-
-        // Append the SVG path element string for this segment
-        paths.push(`<path d="${pathD}" fill="${colors[i]}"/>`);
     }
 
-    // Combine all SVG path elements with the SVG container
-    return svgStart + paths.join('') + svgEnd;
-}
-
-
-function placePolylines(trips, colours){
-    var group = new L.featureGroup();
-    trips.forEach(function(trip) {
-    var color = colours[trip.trip.username] ? `rgb(${colours[trip.trip.username].map(c => Math.round(c * 255)).join(',')})` : 'rgb(255, 255, 255)';
-    var polylineOptions = {
-        color: color,
-        className: trip.trip.type === "air" ? `polyline airPolyline` : `polyline`
-    };
-    var poly;
-    if (trip.trip.type !== "air") {
-        poly = L.polyline(trip.path, polylineOptions).bindPopup(getPopupContent(
-            trip.trip.uid, trip.trip.origin_station, trip.trip.destination_station,
-            trip.trip.start_date, trip.trip.start_time, trip.trip.end_time,
-            trip.trip.username
-        ), {autoPanPaddingTopLeft: [15, 100]});
-    } else {
-            polylineOptions.steps = 15; // Define the number of steps for the geodesic curve
-            polylineOptions.className += ` airPolyline`; // Additional class for air trips
-            tempPoly = L.geodesic(trip.path, polylineOptions);
-            
-            // Redefine trip.path to the generated geodesic polyline's path
-            trip.path = tempPoly.getLatLngs().flat(); // Flatten in case it's an array of arrays
-
-            poly = L.polyline(trip.path, polylineOptions).bindPopup(getPopupContent(
-                trip.trip.uid, trip.trip.origin_station, trip.trip.destination_station,
-                trip.trip.start_date, trip.trip.start_time, trip.trip.end_time,
-                trip.trip.username
-            ), {autoPanPaddingTopLeft: [15, 100]});
+    for (const key in groups) {
+        const group = groups[key];
+        for (let i = 0; i < group.length; i++) {
+            userMarkers[group[i]].el.style.opacity = '0';
+            userMarkers[group[i]].marker.getElement().style.pointerEvents = 'none';
         }
 
+        const colors = group.map(u => userMarkers[u].color);
+        const el = document.createElement('div');
+        el.innerHTML = createPieSVG(colors);
+        el.style.cursor = 'pointer';
 
-    poly.originalLatLngs = trip.path;
-    poly.startTimestamp = new Date(trip.trip.utc_start_datetime).getTime();
-    poly.endTimestamp = new Date(trip.trip.utc_end_datetime).getTime();
-    poly.trip = trip.trip;  // Store trip data in the layer for easy access
-
-    // Create a marker for each user if it doesn't already exist
-    if (!userMarkers[trip.trip.username]) {
-        var customIcon = L.divIcon({
-            html: `<span style="background-color: ${color}; width: 10px; height: 10px; display: block; border-radius: 50%; border: 2px solid white;"></span>`,
-            className: 'user-custom-icon',
-            iconSize: [20, 20],
-            iconAnchor: [10, 10],
-            popupAnchor: [0, -10]
-        });
-        var marker = L.marker(trip.path[0], {icon: customIcon}).bindPopup(trip.trip.username);
-        marker.addTo(map);
-        userMarkers[trip.trip.username] = marker;
+        const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
+            .setLngLat(userPositions[group[0]])
+            .setPopup(new maplibregl.Popup({ offset: 10 }).setText('Users: ' + group.join(', ')))
+            .addTo(map);
+        
+        multiMarkers.push(marker);
     }
-
-    group.addLayer(poly);
-});
-
-
-    window.tripGroup = group;
-    group.addTo(map);
-    map.fitBounds(group.getBounds());
-    $('.spinner-container').hide();
-
-    initializeSlider();
 }
 
+function createPieSVG(colors) {
+    const size = 20;
+    let paths = '';
+    const angleInc = (2 * Math.PI) / colors.length;
 
+    colors.forEach((color, i) => {
+        const start = angleInc * i - Math.PI / 2;
+        const end = start + angleInc;
+        const x1 = 10 + 10 * Math.cos(start);
+        const y1 = 10 + 10 * Math.sin(start);
+        const x2 = 10 + 10 * Math.cos(end);
+        const y2 = 10 + 10 * Math.sin(end);
+        const large = angleInc > Math.PI ? 1 : 0;
+        paths += `<path d="M10,10 L${x1},${y1} A10,10 0 ${large},1 ${x2},${y2} Z" fill="${color}"/>`;
+    });
 
-$.get('{{url_for("getMultiTrips", tripIds=tripIds)}}', function(data, status){
-  var trips = data[0];
-  var prices = data[1];
-  var colours = data[2];
-  trips.reverse();
-  placePolylines(trips, colours);
-  $('.futurePolyline').show();
-});
+    return `<svg width="${size}" height="${size}" viewBox="0 0 20 20">${paths}</svg>`;
+}
 
+document.addEventListener('DOMContentLoaded', initialize);
 </script>
-
 {% endblock %}

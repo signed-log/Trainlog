@@ -1,28 +1,15 @@
 {% extends "layout.html" %}
 {% block content %}
-
-<!-- Include leaflet-gpx plugin in your HTML -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.5.1/gpx.min.js"></script>
-
-
-  <div id="map" class="mapRouting">
-  </div>
-
+<div id="map" class="mapRouting"></div>
 <div id="sidebar">
-    <div id="sidebar-content">
-    </div>
+    <div id="sidebar-content"></div>
 </div>
-
-
-
-  <script>
-
-
+<script>
 var id = getGetParams().get("id");
-var newTrip = JSON.parse(sessionStorage.getItem(id));
+var newTrip = null;
 var currentRoute;
 var routeDetails = null;
-
 const texts = {
   "routeTitle": "{{routeTitle}}",
   "fineTuneNote": "{{fineTuneNote}}",
@@ -35,65 +22,64 @@ const texts = {
   "useNewRouter": "{{useNewRouter}}"
 };
 
-var type = getGetParams().get("type");
+// Try POST data first, then sessionStorage
+{% if trip_data %}
+newTrip = {{ trip_data | safe }};
+{% endif %}
+if (!newTrip && id) {
+    newTrip = JSON.parse(sessionStorage.getItem(id));
+}
+
+if (!newTrip) {
+    document.getElementById('sidebar-content').innerHTML = '<h4>Error: No trip data provided</h4>';
+    throw new Error('No trip data');
+}
+
+var type = getGetParams().get("type") || newTrip.type;
 newTrip["type"] = type;
 var freehand = getGetParams().get("freehand");
-if (!freehand){
-  var routerurl = `${window.location.origin}/forwardRouting/${type}/route/v1`;
+if (!freehand) {
+    var routerurl = `${window.location.origin}/forwardRouting/${type}/route/v1`;
+} else {
+    location.href = "{{ url_for('freehand', username=username) }}" + location.search;
 }
-else {
-  location.href = "{{ url_for('freehand', username=username) }}" + location.search;
-}
-
-
 var origCoord = newTrip["originStation"][0];
 var destCoord = newTrip["destinationStation"][0];
 var origLabel = newTrip["originStation"][1];
 var destLabel = newTrip["destinationStation"][1];
-
-var wplist = [ origCoord, destCoord ];
-
+var wplist = [origCoord, destCoord];
 var spinnerContent = '<div class="spinner-container"><div class="lds-spinner"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div></div>';
-var errorContent = "<h4> {{routingError}} <h4>";
-    errorContent += "<p> {{routingErrorDetails}} </p>";
-    errorContent += `<p><button onclick="location.reload()"> {{retry}} </button></p>`;
-
-var saveErrorContent = "<h4> {{saveError}} </h4>";
-    saveErrorContent += "<p> {{saveErrorDetails}} </p>";
-    saveErrorContent += `<p><button onclick="location.reload();"> {{retry}} </button></p>`;
-
+var errorContent = "<h4>{{routingError}}<h4><p>{{routingErrorDetails}}</p><p><button onclick=\"location.reload()\">{{retry}}</button></p>";
+var saveErrorContent = "<h4>{{saveError}}</h4><p>{{saveErrorDetails}}</p><p><button onclick=\"location.reload();\">{{retry}}</button></p>";
 var map = createMap(null, origCoord);
 var sidebar;
 var getCountryUrl = '{{url_for("getCountry")}}';
 routing(map, true, type, getCountryUrl);
 
-async function saveTrip(continueTrip=false){
-    if(["accommodation", "restaurant", "poi"].includes(type)){
-        newTrip["trip_length"] = 0
-        newTrip["estimated_trip_duration"] = 0
+async function saveTrip(continueTrip=false) {
+    if (["accommodation", "restaurant", "poi"].includes(type)) {
+        newTrip["trip_length"] = 0;
+        newTrip["estimated_trip_duration"] = 0;
     }
     sidebar.setContent(spinnerContent);
     newTrip["details"] = routeDetails;
     $.post({
-        url:'{{url_for("saveTrip", username=username)}}',
-        data:{
-            jsonPath:JSON.stringify(currentRoute),
-            newTrip:JSON.stringify(newTrip)
+        url: '{{url_for("saveTrip", username=username)}}',
+        data: {
+            jsonPath: JSON.stringify(currentRoute),
+            newTrip: JSON.stringify(newTrip)
         },
-        success:function(res){
-            if (!continueTrip || newTrip.precision != "preciseDates"){
+        success: function(res) {
+            if (!continueTrip || newTrip.precision != "preciseDates") {
                 location.href = "{{ url_for('landing') }}";
-            }
-            else{
+            } else {
                 location.href = `{{ url_for('new', username=username, vehicle_type='') }}${type}?prevDest=${newTrip["destinationStation"]}&prevEndDate=${newTrip["newTripEndDate"]}&prevEndTime=${newTrip["newTripEndTime"]}`;
             }
         },
-        error:function(){
+        error: function() {
             sidebar.setContent(saveErrorContent);
         }
     });
 }
-  </script>
+</script>
 {% endblock %}
-
-   

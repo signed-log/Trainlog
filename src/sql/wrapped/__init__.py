@@ -1,0 +1,16 @@
+from src.sql import SqlTemplate
+
+totals = SqlTemplate("src/sql/wrapped/totals.sql")
+previous_year_totals = SqlTemplate("src/sql/wrapped/previous_year_totals.sql")
+longest_trip = SqlTemplate("src/sql/wrapped/longest_trip.sql")
+monthly_breakdown = SqlTemplate("src/sql/wrapped/monthly_breakdown.sql")
+fastest_trip = SqlTemplate("src/sql/wrapped/fastest_trip.sql")
+day_of_week = SqlTemplate("src/sql/wrapped/day_of_week.sql")
+time_of_day = SqlTemplate("src/sql/wrapped/time_of_day.sql")
+first_last_trip = SqlTemplate("src/sql/wrapped/first_last_trip.sql")
+unique_stations = SqlTemplate("src/sql/wrapped/unique_stations.sql")
+streak = SqlTemplate("src/sql/wrapped/streak.sql")
+averages = SqlTemplate("src/sql/wrapped/averages.sql")
+percentile = SqlTemplate("src/sql/wrapped/percentile.sql")
+border_crossings = SqlTemplate("src/sql/wrapped/border_crossings.sql")
+countries = SqlTemplate("src/sql/wrapped/countries.sql")

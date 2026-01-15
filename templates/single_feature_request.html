@@ -156,6 +156,75 @@
 
             </div>
           </div>
+          <div class="card mt-4">
+            <div class="card-header">
+              <h5 class="mb-0"><i class="fa-solid fa-comments me-2"></i>{{ feature_requests_comments if feature_requests_comments is defined else 'Comments' }}</h5>
+            </div>
+            <div class="card-body">
+              
+              <!-- Add Comment Form -->
+              {% if logged_in_user and username %}
+              <form id="commentForm" class="mb-4">
+                <div class="mb-2">
+                  <textarea class="form-control" id="commentContent" rows="3" 
+                            placeholder="{{ feature_requests_comment_placeholder if feature_requests_comment_placeholder is defined else 'Write a comment...' }}" 
+                            maxlength="2000" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm">
+                  <i class="fa-solid fa-paper-plane me-1"></i>{{ feature_requests_comment_submit if feature_requests_comment_submit is defined else 'Post Comment' }}
+                </button>
+              </form>
+              {% else %}
+              <p class="text-muted mb-4">{{ feature_requests_login_to_comment if feature_requests_login_to_comment is defined else 'Log in to comment' }}</p>
+              {% endif %}
+
+              <!-- Comments List -->
+              <div id="commentsList">
+                <div class="text-center text-muted">
+                  <div class="spinner-border spinner-border-sm" role="status"></div>
+                  {{ feature_requests_loading if feature_requests_loading is defined else 'Loading...' }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Edit Comment Modal -->
+          <div class="modal fade" id="editCommentModal" tabindex="-1">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">{{ feature_requests_edit_comment if feature_requests_edit_comment is defined else 'Edit Comment' }}</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  <textarea class="form-control" id="editCommentContent" rows="4" maxlength="2000"></textarea>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ cancel }}</button>
+                  <button type="button" class="btn btn-primary" onclick="submitEditComment()">{{ update }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Delete Comment Modal -->
+          <div class="modal fade" id="deleteCommentModal" tabindex="-1">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">{{ feature_requests_delete_comment if feature_requests_delete_comment is defined else 'Delete Comment' }}</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                  <p>{{ feature_requests_delete_comment_confirm if feature_requests_delete_comment_confirm is defined else 'Are you sure you want to delete this comment?' }}</p>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ cancel }}</button>
+                  <button type="button" class="btn btn-danger" onclick="submitDeleteComment()">{{ delete }}</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Right Sidebar - Info (always) + Admin (owner only) -->
@@ -411,6 +480,166 @@ function showVoters(requestId) {
 document.getElementById('editModal').addEventListener('hidden.bs.modal', function () {
   document.getElementById('editForm').reset();
 });
+
+const REQUEST_ID = {{ request.id }};
+const CURRENT_USER = '{{ logged_in_user|default("", true) }}';
+const IS_OWNER = {{ 'true' if is_owner else 'false' }};
+const USERNAME = '{{ username|default("", true) }}';
+let editingCommentId = null;
+let deletingCommentId = null;
+
+function loadComments() {
+  fetch(`/feature_requests/${REQUEST_ID}/comments`)
+    .then(r => r.json())
+    .then(comments => renderComments(comments))
+    .catch(() => {
+      document.getElementById('commentsList').innerHTML = 
+        '<p class="text-danger">{{ feature_requests_error_loading if feature_requests_error_loading is defined else "Error loading comments" }}</p>';
+    });
+}
+
+function renderComments(comments) {
+  const container = document.getElementById('commentsList');
+  if (!comments.length) {
+    container.innerHTML = '<p class="text-muted">{{ feature_requests_no_comments if feature_requests_no_comments is defined else "No comments yet" }}</p>';
+    return;
+  }
+
+  // Build tree
+  const map = {}, roots = [];
+  comments.forEach(c => { c.children = []; map[c.id] = c; });
+  comments.forEach(c => {
+    if (c.parent_id && map[c.parent_id]) map[c.parent_id].children.push(c);
+    else roots.push(c);
+  });
+
+  container.innerHTML = roots.map(c => renderComment(c, 0)).join('');
+}
+
+function renderComment(c, depth) {
+  const indent = Math.min(depth, 4) * 20;
+  const canEdit = CURRENT_USER && (IS_OWNER || c.raw_username === CURRENT_USER);
+  const edited = c.modified && c.created !== c.modified;
+  
+  return `
+    <div class="border-start ps-3 mb-3" style="margin-left:${indent}px">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <strong>${c.username}</strong>
+          <small class="text-muted ms-2">${new Date(c.created).toLocaleString()}</small>
+          ${edited ? '<small class="text-muted fst-italic ms-1">({{ feature_requests_edited if feature_requests_edited is defined else "edited" }})</small>' : ''}
+        </div>
+        ${canEdit ? `
+          <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary btn-sm" onclick="editComment(${c.id}, \`${c.content.replace(/`/g,'\\`').replace(/\\/g,'\\\\')}\`)">
+              <i class="fa-solid fa-edit"></i>
+            </button>
+            <button class="btn btn-outline-danger btn-sm" onclick="deleteComment(${c.id})">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        ` : ''}
+      </div>
+      <div class="mt-1 mb-2" style="white-space:pre-wrap">${escapeHtml(c.content)}</div>
+      ${CURRENT_USER && USERNAME ? `<button class="btn btn-link btn-sm p-0" onclick="showReplyForm(${c.id})">
+        <i class="fa-solid fa-reply"></i> {{ feature_requests_reply if feature_requests_reply is defined else "Reply" }}
+      </button>` : ''}
+      <div id="replyForm-${c.id}" class="mt-2 d-none">
+        <textarea class="form-control form-control-sm mb-2" id="replyContent-${c.id}" rows="2" maxlength="2000"></textarea>
+        <button class="btn btn-primary btn-sm" onclick="submitReply(${c.id})">{{ feature_requests_comment_submit if feature_requests_comment_submit is defined else "Post" }}</button>
+        <button class="btn btn-secondary btn-sm" onclick="hideReplyForm(${c.id})">{{ cancel }}</button>
+      </div>
+      ${c.children.map(child => renderComment(child, depth + 1)).join('')}
+    </div>
+  `;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function showReplyForm(id) {
+  document.getElementById(`replyForm-${id}`).classList.remove('d-none');
+}
+
+function hideReplyForm(id) {
+  document.getElementById(`replyForm-${id}`).classList.add('d-none');
+}
+
+function submitReply(parentId) {
+  const content = document.getElementById(`replyContent-${parentId}`).value.trim();
+  if (!content) return;
+  
+  const form = new FormData();
+  form.append('content', content);
+  form.append('parent_id', parentId);
+  
+  fetch(`/u/${USERNAME}/feature_requests/${REQUEST_ID}/comment`, {
+    method: 'POST',
+    body: form,
+    headers: {'X-Requested-With': 'XMLHttpRequest'}
+  }).then(r => r.json()).then(() => loadComments());
+}
+
+document.getElementById('commentForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const content = document.getElementById('commentContent').value.trim();
+  if (!content) return;
+  
+  const form = new FormData();
+  form.append('content', content);
+  
+  fetch(`/u/${USERNAME}/feature_requests/${REQUEST_ID}/comment`, {
+    method: 'POST',
+    body: form,
+    headers: {'X-Requested-With': 'XMLHttpRequest'}
+  }).then(r => r.json()).then(() => {
+    document.getElementById('commentContent').value = '';
+    loadComments();
+  });
+});
+
+function editComment(id, content) {
+  editingCommentId = id;
+  document.getElementById('editCommentContent').value = content;
+  new bootstrap.Modal(document.getElementById('editCommentModal')).show();
+}
+
+function submitEditComment() {
+  const content = document.getElementById('editCommentContent').value.trim();
+  if (!content) return;
+  
+  const form = new FormData();
+  form.append('content', content);
+  
+  fetch(`/u/${USERNAME}/feature_requests/comment/${editingCommentId}/edit`, {
+    method: 'POST',
+    body: form,
+    headers: {'X-Requested-With': 'XMLHttpRequest'}
+  }).then(() => {
+    bootstrap.Modal.getInstance(document.getElementById('editCommentModal')).hide();
+    loadComments();
+  });
+}
+
+function deleteComment(id) {
+  deletingCommentId = id;
+  new bootstrap.Modal(document.getElementById('deleteCommentModal')).show();
+}
+
+function submitDeleteComment() {
+  fetch(`/u/${USERNAME}/feature_requests/comment/${deletingCommentId}/delete`, {
+    method: 'POST',
+    headers: {'X-Requested-With': 'XMLHttpRequest'}
+  }).then(() => {
+    bootstrap.Modal.getInstance(document.getElementById('deleteCommentModal')).hide();
+    loadComments();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', loadComments);
 </script>
 
 {% endblock %}

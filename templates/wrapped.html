@@ -1,0 +1,1115 @@
+{% extends "bootstrap/layout.html" %}
+{% block content %}
+
+<style>
+    :root {
+        --primary: #1a1a2e;
+        --accent: #e94560;
+        --accent2: #0f3460;
+        --light: #f1f1f1;
+    }
+    
+    .wrapped-body {
+        background: var(--primary);
+        color: white;
+        min-height: 100vh;
+    }
+    
+    .wrapped-container {
+        max-width: 530px;
+        margin: 0 auto;
+        padding-bottom: 50px;
+    }
+    
+    .slide {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+        text-align: center;
+        position: relative;
+    }
+    
+    .slide-intro { background: linear-gradient(135deg, var(--primary) 0%, var(--accent2) 100%); }
+    .slide-stats { background: linear-gradient(135deg, var(--accent2) 0%, var(--primary) 100%); }
+    .slide-top { background: linear-gradient(135deg, #16213e 0%, var(--accent) 100%); }
+    .slide-final { background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%); }
+    .slide-alt { background: linear-gradient(135deg, #0f3460 0%, #16213e 100%); }
+    .slide-highlight { background: linear-gradient(135deg, #e94560 0%, #0f3460 100%); }
+    
+    .year-badge {
+        font-size: 1.2rem;
+        background: var(--accent);
+        padding: 8px 24px;
+        border-radius: 30px;
+        margin-bottom: 20px;
+        display: inline-block;
+    }
+    
+    .big-number {
+        font-size: 4.5rem;
+        font-weight: 800;
+        line-height: 1;
+        margin: 20px 0;
+        background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .medium-number {
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1;
+        margin: 15px 0;
+        text-transform:capitalize;
+    }
+    
+    .stat-label {
+        font-size: 1.5rem;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    
+    .stat-card {
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 30px;
+        margin: 15px 0;
+        width: 100%;
+        max-width: 350px;
+    }
+    
+    .stat-card-number { font-size: 3rem; font-weight: 700; }
+    .stat-card-label { font-size: 1rem; opacity: 0.8; }
+    
+    .top-list {
+        text-align: left;
+        width: 100%;
+        max-width: 350px;
+    }
+    
+    .top-item {
+        display: flex;
+        align-items: center;
+        background: rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin: 10px 0;
+    }
+    
+    .top-rank {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--accent);
+        width: 40px;
+    }
+    
+    .top-name { flex: 1; font-size: 1.1rem; }
+    .top-value { font-weight: 600; opacity: 0.9; }
+    
+    .fun-fact {
+        background: rgba(255,255,255,0.15);
+        border-radius: 16px;
+        padding: 25px;
+        margin: 20px 0;
+        max-width: 350px;
+        width: 100%;
+    }
+    
+    .fun-fact-icon i { font-size: 2.5rem; margin-bottom: 10px; }
+    
+    .fun-fact-small {
+        background: rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin: 10px 0;
+        max-width: 350px;
+        width: 100%;
+        text-align: left;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .fun-fact-small .icon i {
+        font-size: 2rem;
+    }
+    
+    .comparison {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 10px;
+        font-size: 1.1rem;
+    }
+    
+    .comparison-up { color: #4ade80; }
+    .comparison-down { color: #f87171; }
+    
+    .divider {
+        width: 60px;
+        height: 4px;
+        background: var(--accent);
+        border-radius: 2px;
+        margin: 30px auto;
+    }
+    
+    .section-title {
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        opacity: 0.7;
+        margin-bottom: 10px;
+    }
+    
+    .flag { font-size: 1.5rem; margin-right: 10px; }
+    .flagPNG {vertical-align: 0px;}
+    .logo-text {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 12px 16px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.50);
+        margin-bottom: 15px;
+    }
+
+    .logo-text img {
+        height: 100px;
+        width: auto;
+        display: block;
+    }
+    
+    .scroll-hint {
+        position: absolute;
+        bottom: 30px;
+        animation: bounce 2s infinite;
+    }
+    
+    @keyframes bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(10px); }
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        width: 100%;
+        max-width: 350px;
+    }
+    
+    .stats-grid .stat-card { margin: 0; padding: 20px; }
+    .stats-grid .stat-card-number { font-size: 2rem; }
+    
+    /* Shareable Recap Card */
+    .recap-card {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        border-radius: 24px;
+        padding: 30px;
+        width: 100%;
+        max-width: 450px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .recap-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("/static/images/logo_square.png");
+        background-size: 60px 60px;
+        background-repeat: repeat;
+        opacity: 0.03;
+        pointer-events: none;
+    }
+    
+    .recap-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .recap-logo {
+        height: 50px;
+        width: auto;
+    }
+    
+    .recap-year-badge {
+        background: var(--accent);
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 800;
+        padding: 8px 20px;
+        border-radius: 20px;
+    }
+    
+    .recap-username {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 25px;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .recap-main-stats {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 25px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .recap-stat-big {
+        text-align: center;
+        flex: 1;
+        background: linear-gradient(180deg, rgba(233, 69, 96, 0.3) 0%, rgba(233, 69, 96, 0.1) 100%);
+        border-radius: 12px;
+        padding: 15px 10px;
+        margin: 0 5px;
+    }
+    
+    .recap-stat-big .recap-number {
+        display: block;
+        font-size: clamp(1.2rem, 5.5vw, 2.2rem);
+        font-weight: 600;
+        color: white;
+        line-height: 1.2;
+    }
+    
+    .recap-stat-big .recap-label {
+        display: block;
+        font-size: 0.75rem;
+        opacity: 0.7;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 5px;
+    }
+    
+    .recap-secondary-stats {
+        display: flex;
+        justify-content: space-around;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .recap-stat-small {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        opacity: 0.9;
+    }
+    
+    .recap-stat-small i {
+        color: var(--accent);
+    }
+    
+    .recap-countries {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .recap-flag {
+        width: 36px;
+        height: 24px;
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+    
+    .recap-footer {
+        text-align: center;
+        font-size: 0.9rem;
+        opacity: 0.5;
+        position: relative;
+        z-index: 1;
+    }
+    
+    .share-button {
+        margin-top: 25px;
+        background: var(--accent);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 30px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .share-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(233, 69, 96, 0.4);
+    }
+    
+    .year-selector {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+    }
+    
+    .year-selector select {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 1rem;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 100px 20px;
+        color: white;
+    }
+    
+    .back-link {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 1000;
+        color: white;
+        text-decoration: none;
+        font-size: 1.5rem;
+        opacity: 0.7;
+    }
+    
+    .back-link:hover {
+        opacity: 1;
+        color: white;
+    }
+    
+    .percentile-bar {
+        width: 100%;
+        max-width: 300px;
+        height: 20px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 15px 0;
+    }
+    
+    .percentile-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent) 0%, #4ade80 100%);
+        border-radius: 10px;
+        transition: width 1s ease-out;
+    }
+    
+    .time-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        width: 100%;
+        max-width: 350px;
+    }
+    
+    .time-block {
+        background: rgba(255,255,255,0.1);
+        border-radius: 10px;
+        padding: 15px 10px;
+        text-align: center;
+    }
+    
+    .time-block.active {
+        background: var(--accent);
+    }
+    
+    .time-block .icon i { font-size: 1.5rem; margin-bottom: 5px; }
+    .time-block .count { font-weight: 700; font-size: 1.2rem; }
+    .time-block .label { font-size: 0.7rem; opacity: 0.8; text-transform: uppercase; }
+</style>
+
+<div class="wrapped-body">
+    <a href="{{ url_for('stats', username=data.username, tripType='combined') }}" class="back-link">
+        <i class="fa-solid fa-arrow-left"></i>
+    </a>
+    {% if data.total_trips > 0 %}
+    
+    <div class="wrapped-container">
+        
+        <!-- Intro Slide -->
+        <div class="slide slide-intro">
+            <div class="logo-text">
+                <img
+                    src="{{ url_for('static', filename='images/logo.png') }}"
+                    alt="Trainlog"
+                >
+            </div>
+            <div class="year-badge">{{ wrapped_title or "WRAPPED" }} {{ data.year }}</div>
+            <h1 style="font-size: 2.5rem; margin: 20px 0;">
+                {{ wrapped_your_year or "Your Year" }}<br>
+                {{ wrapped_in_travel or "in Travel" }}
+            </h1>
+            <p style="opacity: 0.8; max-width: 300px;">
+                {{ wrapped_intro or "Let's look back at all the journeys you've taken in" }} {{ data.year }}.
+            </p>
+            <div class="scroll-hint">
+                <i class="fas fa-chevron-down fa-2x" style="opacity: 0.5;"></i>
+            </div>
+        </div>
+        
+        <!-- Total Trips -->
+        <div class="slide slide-stats">
+            <div class="section-title">{{ wrapped_this_year or "This year you took" }}</div>
+            <div class="big-number">{{ "{:,}".format(data.total_trips) }}</div>
+            <div class="stat-label">{{ wrapped_trips or "Trips" }}</div>
+            {% if data.trips_change is not none %}
+            <div class="comparison {% if data.trips_change >= 0 %}comparison-up{% else %}comparison-down{% endif %}">
+                <i class="fas fa-arrow-{% if data.trips_change >= 0 %}up{% else %}down{% endif %}"></i>
+                <span>
+                    {{ data.trips_change|abs }}%
+                    {% if data.trips_change >= 0 %}
+                        {{ wrapped_more_than or "more than" }}
+                    {% else %}
+                        {{ wrapped_less_than or "less than" }}
+                    {% endif %}
+                    {{ data.year|int - 1 }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Distance -->
+        <div class="slide slide-top">
+            <div class="section-title">{{ wrapped_you_traveled or "You traveled" }}</div>
+            <div class="big-number">{{ "{:,}".format(data.total_km) }}</div>
+            <div class="stat-label">{{ wrapped_kilometers or "Kilometers" }}</div>
+            
+            {% if data.distance_comparisons %}
+            <div style="margin-top: 30px;">
+                {% set icon_map = {
+                    '🌍': 'fa-solid fa-earth-europe',
+                    '🗺️': 'fa-solid fa-map',
+                    '✈️': 'fa-solid fa-plane',
+                    '🚗': 'fa-solid fa-car',
+                    '🚆': 'fa-solid fa-train'
+                } %}
+                {% for comp in data.distance_comparisons[:2] %}
+                <div class="fun-fact-small">
+                    <span class="icon">
+                        <i class="{{ icon_map.get(comp.emoji, 'fa-solid fa-location-dot') }}"></i>
+                    </span>
+                    <span>
+                        {% if comp.percent %}
+                            <strong>{{ comp.percent }}%</strong> {{ wrapped_of or "of" }} {{ comp.name }}
+                        {% else %}
+                            <strong>{{ comp.times }}×</strong> {{ comp.name }}
+                        {% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Duration & Days -->
+        <div class="slide slide-stats">
+            <div class="section-title">{{ wrapped_time_traveling or "Time on the move" }}</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-number">{{ "{:,}".format(data.duration_hours) }}</div>
+                    <div class="stat-card-label">{{ wrapped_hours or "Hours" }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-number">{{ data.duration_days }}</div>
+                    <div class="stat-card-label">{{ wrapped_days or "Days" }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-number">{{ data.days_traveled }}</div>
+                    <div class="stat-card-label">{{ wrapped_travel_days or "Travel days" }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-number">{{ data.year_percent }}%</div>
+                    <div class="stat-card-label">{{ wrapped_of_year or "of the year" }}</div>
+                </div>
+            </div>
+        </div>
+        <!-- Averages -->
+        <div class="slide slide-alt">
+            <div class="section-title">{{ wrapped_on_average or "On average" }}</div>
+            <div class="fun-fact">
+                <div class="fun-fact-icon"><i class="fa-solid fa-ruler"></i></div>
+                <div>
+                    {{ wrapped_avg_trip or "Your average trip was" }}<br>
+                    <strong style="font-size: 2rem;">{{ data.avg_trip_km }} km</strong>
+                </div>
+            </div>
+            {% if data.avg_trip_duration > 0 %}
+            <div class="fun-fact">
+                <div class="fun-fact-icon"><i class="fa-solid fa-stopwatch"></i></div>
+                <div>
+                    {{ wrapped_avg_duration or "Average duration" }}<br>
+                    <strong style="font-size: 2rem;">
+                        {{ (data.avg_trip_duration / 60)|int }} {{ wrapped_minutes or "min" }}
+                    </strong>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Top Countries -->
+        {% if data.top_countries %}
+        <div class="slide slide-top">
+            <div class="section-title">{{ wrapped_exploration or "Exploration" }}</div>
+            <div class="stats-grid" style="margin-bottom: 30px;">
+                <div class="stat-card">
+                    <div class="stat-card-number">{{ data.country_count }}</div>
+                    <div class="stat-card-label">{{ wrapped_countries or "Countries" }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-card-number">~{{ data.border_crossings }}</div>
+                    <div class="stat-card-label">{{ wrapped_borders or "Borders" }}</div>
+                </div>
+            </div>
+            <div class="divider"></div>
+            <div class="top-list">
+                {% for country in data.top_countries %}
+                <div class="top-item">
+                    <span class="top-rank">{{ loop.index }}</span>
+                    <span class="flag"><img class="flagPNG" src="/static/images/flags/{{ country.code|lower }}.svg" alt="{{ country.code }} flag"/></span>
+                    <span class="top-name" data-country="{{ country.code }}"></span>
+                    <span class="top-value" data-km="{{ country.km }}"></span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Unique Stations -->
+        {% if data.unique_stations > 0 %}
+        <div class="slide slide-highlight">
+            <div class="section-title">{{ wrapped_stations_explored or "Stations explored" }}</div>
+            <div class="big-number">{{ data.unique_stations }}</div>
+            <div class="stat-label">{{ wrapped_unique_stations or "Unique stations" }}</div>
+        </div>
+        {% endif %}
+        
+        <!-- Top Routes -->
+        {% if data.top_routes %}
+        <div class="slide slide-alt">
+            <div class="section-title">{{ wrapped_top_routes or "Most traveled routes" }}</div>
+            <div class="divider"></div>
+            <div class="top-list">
+                {% for route in data.top_routes %}
+                <div class="top-item">
+                    <span class="top-rank">{{ loop.index }}</span>
+                    <span class="top-name">{{ route.name }}</span>
+                    <span class="top-value">{{ route.count }}×</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Time of Day -->
+        {% if data.time_of_day %}
+        <div class="slide slide-top">
+            <div class="section-title">{{ wrapped_when_you_travel or "When you travel" }}</div>
+            <div class="time-grid">
+                <div class="time-block {% if data.time_of_day.favorite == 'morning' %}active{% endif %}">
+                    <div class="icon"><i class="fa-solid fa-mug-saucer"></i></div>
+                    <div class="count">{{ data.time_of_day.breakdown.get('morning', 0) }}</div>
+                    <div class="label">{{ wrapped_morning or "Morning" }}</div>
+                </div>
+                <div class="time-block {% if data.time_of_day.favorite == 'afternoon' %}active{% endif %}">
+                    <div class="icon"><i class="fa-solid fa-sun"></i></div>
+                    <div class="count">{{ data.time_of_day.breakdown.get('afternoon', 0) }}</div>
+                    <div class="label">{{ wrapped_afternoon or "Afternoon" }}</div>
+                </div>
+                <div class="time-block {% if data.time_of_day.favorite == 'evening' %}active{% endif %}">
+                    <div class="icon"><i class="fa-solid fa-cloud-sun"></i></div>
+                    <div class="count">{{ data.time_of_day.breakdown.get('evening', 0) }}</div>
+                    <div class="label">{{ wrapped_evening or "Evening" }}</div>
+                </div>
+                <div class="time-block {% if data.time_of_day.favorite == 'night' %}active{% endif %}">
+                    <div class="icon"><i class="fa-solid fa-moon"></i></div>
+                    <div class="count">{{ data.time_of_day.breakdown.get('night', 0) }}</div>
+                    <div class="label">{{ wrapped_night or "Night" }}</div>
+                </div>
+            </div>
+            <p style="margin-top: 20px; opacity: 0.8;">
+            {{ {
+                'morning': wrapped_you_re_a_morning_traveler,
+                'afternoon': wrapped_you_re_an_afternoon_traveler,
+                'evening': wrapped_you_re_an_evening_traveler,
+                'night': wrapped_you_re_a_night_traveler
+            }[data.time_of_day.favorite] }}
+            </p>
+        </div>
+        {% endif %}
+        <!-- Favorite Day -->
+        {% if data.favorite_day %}
+        <div class="slide slide-stats">
+            <div class="section-title">{{ wrapped_favorite_day or "Favorite travel day" }}</div>
+            <div class="medium-number">
+                <span data-intl-weekday data-weekday="{{ data.favorite_day.day }}">
+                    {{ data.favorite_day.day }}
+                </span>
+            </div>
+            <p style="opacity: 0.8;">
+                {{ wrapped_with or "with" }}
+                <strong>{{ data.favorite_day.trips }}</strong>
+                {{ trips or "trips" }}
+            </p>
+        </div>
+        {% endif %}
+        
+        <!-- Records: Longest & Fastest -->
+        <div class="slide slide-highlight">
+            <div class="section-title">{{ wrapped_your_records or "Your records" }}</div>
+            
+            {% if data.longest_trip %}
+            <div class="fun-fact">
+                <div class="fun-fact-icon">
+                    <i class="fa-solid fa-trophy"></i>
+                </div>
+                <div>
+                    <strong>{{ wrapped_longest_trip or "Longest trip" }}</strong><br>
+                    {{ data.longest_trip.origin }} → {{ data.longest_trip.destination }}<br>
+                    <span style="font-size: 1.5rem; font-weight: 700;">
+                        {{ "{:,}".format(data.longest_trip.km) }} km
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if data.fastest_trip %}
+            <div class="fun-fact">
+                <div class="fun-fact-icon">
+                    <i class="fa-solid fa-bolt"></i>
+                </div>
+                <div>
+                    <strong>{{ wrapped_fastest_trip or "Fastest trip" }}</strong><br>
+                    {{ data.fastest_trip.origin }} → {{ data.fastest_trip.destination }}<br>
+                    <span style="font-size: 1.5rem; font-weight: 700;">
+                        {{ data.fastest_trip.speed }} km/h
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Streak -->
+        {% if data.streak %}
+        <div class="slide slide-alt">
+            <div class="section-title">{{ wrapped_travel_streak or "Travel streak" }}</div>
+            <div class="big-number">{{ data.streak.days }}</div>
+            <div class="stat-label">{{ wrapped_consecutive_days or "Consecutive days" }}</div>
+            <p style="margin-top: 20px; opacity: 0.8;">
+                <span
+                    data-intl-date
+                    data-date="{{ data.streak.start.isoformat() }}"
+                    data-format="month_short_day"
+                >
+                    {{ data.streak.start.strftime('%b %d') }}
+                </span>
+                →
+                <span
+                    data-intl-date
+                    data-date="{{ data.streak.end.isoformat() }}"
+                    data-format="month_short_day"
+                >
+                    {{ data.streak.end.strftime('%b %d') }}
+                </span>
+            </p>
+        </div>
+        {% endif %}
+        
+        <!-- First & Last Trip -->
+        {% if data.first_trip and data.last_trip %}
+        <div class="slide slide-stats">
+            <div class="section-title">{{ wrapped_bookends or "Your year bookends" }}</div>
+            
+            <div class="fun-fact">
+                <div class="fun-fact-icon">
+                    <i class="fa-solid fa-calendar-plus"></i>
+                </div>
+                <div>
+                    <strong>{{ wrapped_first_trip or "First trip" }}</strong><br>
+                    {{ data.first_trip.origin }} → {{ data.first_trip.destination }}<br>
+                    <small style="opacity: 0.7;">
+                        <span
+                            data-intl-date
+                            data-date="{{ data.first_trip.date.isoformat() }}"
+                            data-format="month_long_day"
+                        >
+                            {{ data.first_trip.date.strftime('%B %d') }}
+                        </span>
+                    </small>
+                </div>
+            </div>
+            
+            <div class="fun-fact">
+                <div class="fun-fact-icon">
+                    <i class="fa-solid fa-calendar-check"></i>
+                </div>
+                <div>
+                    <strong>{{ wrapped_last_trip or "Last trip" }}</strong><br>
+                    {{ data.last_trip.origin }} → {{ data.last_trip.destination }}<br>
+                    <small style="opacity: 0.7;">
+                        <span
+                            data-intl-date
+                            data-date="{{ data.last_trip.date.isoformat() }}"
+                            data-format="month_long_day"
+                        >
+                            {{ data.last_trip.date.strftime('%B %d') }}
+                        </span>
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Busiest Month -->
+        {% if data.busiest_month %}
+        <div class="slide slide-top">
+            <div class="section-title">{{ wrapped_busiest_month or "Busiest month" }}</div>
+            <div class="medium-number">
+                <span data-intl-month data-month="{{ data.busiest_month.month }}">
+                    {{ data.busiest_month.month }}
+                </span>
+            </div>
+            <p style="opacity: 0.8;">
+                {{ wrapped_with or "with" }}
+                <strong>{{ data.busiest_month.trips }}</strong>
+                {{ trips or "trips" }}
+            </p>
+        </div>
+        {% endif %}
+        
+        <!-- CO2 -->
+        {% if data.total_co2 > 0 %}
+        <div class="slide slide-alt">
+            <div class="section-title">{{ wrapped_carbon_footprint or "Carbon footprint" }}</div>
+            <div class="stat-card">
+                <div class="stat-card-number">{{ "{:,.0f}".format(data.total_co2) }}</div>
+                <div class="stat-card-label">kg CO₂</div>
+            </div>
+            <div class="fun-fact">
+                <div class="fun-fact-icon">
+                    <i class="fa-solid fa-seedling"></i>
+                </div>
+                <div>
+                    {{ wrapped_eco_message or "By choosing trains over planes, you're helping the planet!" }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Percentile Ranking -->
+        {% if data.percentile %}
+        <div class="slide slide-highlight">
+            <div class="section-title">{{ wrapped_among_users or "Among Trainlog users" }}</div>
+            <div class="fun-fact">
+                <div>{{ wrapped_you_traveled_more or "You traveled more than" }}</div>
+                <div class="big-number" style="margin: 10px 0;">
+                    {{ data.percentile.km }}%
+                </div>
+                <div>{{ wrapped_of_users or "of users" }}</div>
+                <div class="percentile-bar">
+                    <div
+                        class="percentile-fill"
+                        style="width: {{ data.percentile.km }}%;"
+                    ></div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Final Slide -->
+        <div class="slide slide-final">
+           <div class="logo-text">
+                <img
+                    src="{{ url_for('static', filename='images/logo.png') }}"
+                    alt="Trainlog"
+                >
+            </div>
+            <h1 style="font-size: 2rem; margin: 20px 0;">
+                {{ wrapped_thanks or "Thanks for traveling" }}<br>
+                {{ wrapped_in or "in" }} {{ data.year }}!
+            </h1>
+            <div class="divider"></div>
+            <p style="opacity: 0.8;">
+                {{ wrapped_see_you or "See you on the tracks in" }}
+                {{ data.year|int + 1 }}
+            </p>
+        </div>
+        
+        <!-- Shareable Recap Card -->
+        <div class="slide slide-stats">
+            <div class="section-title">{{ wrapped_share_your_year or "Share your year" }}</div>
+            
+            <div id="recap-card" class="recap-card">
+                <div class="recap-header">
+                    <img
+                        src="{{ url_for('static', filename='images/logo_white.png') }}"
+                        alt="Trainlog"
+                        class="recap-logo"
+                    >
+                    <div class="recap-year-badge">{{ data.year }}</div>
+                </div>
+                
+                <div class="recap-username">{{ data.username }}</div>
+                
+                <div class="recap-main-stats">
+                    <div class="recap-stat-big">
+                        <span class="recap-number" data-intl-number="{{ data.total_trips }}">{{ data.total_trips }}</span>
+                        <span class="recap-label">{{ trips or "Trips" }}</span>
+                    </div>
+                    <div class="recap-stat-big">
+                        <span class="recap-number" data-intl-number="{{ data.total_km }}">{{ data.total_km }}</span>
+                        <span class="recap-label">km</span>
+                    </div>
+                    <div class="recap-stat-big">
+                        <span class="recap-number">{{ data.country_count }}</span>
+                        <span class="recap-label">{{ wrapped_countries_visited or "Countries" }}</span>
+                    </div>
+                </div>
+                
+                <div class="recap-secondary-stats">
+                    <div class="recap-stat-small">
+                        <i class="fa-solid fa-clock"></i>
+                        <span><span data-intl-number="{{ data.duration_hours }}">{{ data.duration_hours }}</span>h</span>
+                    </div>
+                    <div class="recap-stat-small">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <span><span data-intl-number="{{ data.unique_stations }}">{{ data.unique_stations }}</span> {{ wrapped_stations or "stations" }}</span>
+                    </div>
+                    <div class="recap-stat-small">
+                        <i class="fa-solid fa-leaf"></i>
+                        <span><span data-intl-number="{{ data.total_co2 }}">{{ data.total_co2|int }}</span> kg CO₂</span>
+                    </div>
+                </div>
+                
+                {% if data.top_countries %}
+                <div class="recap-countries">
+                    {% for country in data.top_countries[:3] %}
+                    <img 
+                        src="/flags/{{ country.code|lower }}.svg?w=36&h=24"
+                        alt="{{ country.code }}"
+                        class="recap-flag"
+                        crossorigin="anonymous"
+                    >
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="recap-footer">
+                    <span>trainlog.me</span>
+                </div>
+            </div>
+            
+            <button id="download-recap" class="share-button">
+                <i class="fa-solid fa-download"></i>
+                {{ wrapped_download_image or "Download image" }}
+            </button>
+        </div>
+        
+    </div>
+    
+    <script>
+        (function () {
+            const locale =
+                document.documentElement.lang ||
+                navigator.language ||
+                undefined;
+
+            function formatWeekdayFromIndex(weekdayIndex, locale) {
+                const idx = Number(weekdayIndex);
+                if (!Number.isFinite(idx)) return null;
+
+                const base = new Date(Date.UTC(2021, 10, 1));
+                const d = new Date(
+                    base.getTime() + idx * 24 * 60 * 60 * 1000
+                );
+
+                return new Intl.DateTimeFormat(locale, {
+                    weekday: "long"
+                }).format(d);
+            }
+
+            function formatMonthFromNumber(monthNumber, locale) {
+                const m = Number(monthNumber);
+                if (!Number.isFinite(m) || m < 1 || m > 12) return null;
+
+                const d = new Date(Date.UTC(2021, m - 1, 1));
+                return new Intl.DateTimeFormat(locale, {
+                    month: "long"
+                }).format(d);
+            }
+
+            function formatDate(isoString, formatKey, locale) {
+                if (!isoString) return null;
+                const d = new Date(isoString);
+                if (Number.isNaN(d.getTime())) return null;
+
+                let opts;
+                switch (formatKey) {
+                    case "month_short_day":
+                        opts = { month: "short", day: "2-digit" };
+                        break;
+                    case "month_long_day":
+                    default:
+                        opts = { month: "long", day: "2-digit" };
+                        break;
+                }
+                return new Intl.DateTimeFormat(locale, opts).format(d);
+            }
+
+            document.querySelectorAll("[data-intl-weekday]").forEach((el) => {
+                const formatted = formatWeekdayFromIndex(
+                    el.getAttribute("data-weekday"),
+                    locale
+                );
+                if (formatted) el.textContent = formatted;
+            });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                const button = document.getElementById('download-recap');
+
+                if (navigator.share && navigator.canShare) {
+                    button.innerHTML = `
+                        <i class="fa-solid fa-share-nodes"></i>
+                        {{ wrapped_share_image or "Share image" }}
+                    `;
+                }
+            });
+
+            document.querySelectorAll("[data-intl-month]").forEach((el) => {
+                const formatted = formatMonthFromNumber(
+                    el.getAttribute("data-month"),
+                    locale
+                );
+                if (formatted) el.textContent = formatted;
+            });
+
+            document.querySelectorAll("[data-intl-date]").forEach((el) => {
+                const iso = el.getAttribute("data-date");
+                const fmt =
+                    el.getAttribute("data-format") ||
+                    "month_long_day";
+                const formatted = formatDate(iso, fmt, locale);
+                if (formatted) el.textContent = formatted;
+            });
+
+            document.querySelectorAll('.top-name').forEach(el => {
+                const code = el.dataset.country;
+                el.textContent = new Intl.DisplayNames(['{{lang}}'], { type: 'region' }).of(code);
+            });
+
+            document.querySelectorAll('.top-value').forEach(el => {
+                const km = el.dataset.km;
+                el.textContent = new Intl.NumberFormat('{{lang}}').format(km) + ' km';
+            });
+            
+            document.querySelectorAll('[data-intl-number]').forEach(el => {
+                const num = Number(el.getAttribute('data-intl-number'));
+                if (Number.isFinite(num)) {
+                    el.textContent = new Intl.NumberFormat('{{lang}}').format(num);
+                }
+            });
+        })();
+    </script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        document.getElementById('download-recap').addEventListener('click', async function() {
+            const card = document.getElementById('recap-card');
+            const button = this;
+
+            button.disabled = true;
+            button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> {{ wrapped_generating or "Generating..." }}';
+
+            try {
+                const canvas = await html2canvas(card, {
+                    scale: 4,
+                    backgroundColor: null,
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false
+                });
+
+                const blob = await new Promise(resolve =>
+                    canvas.toBlob(resolve, 'image/png')
+                );
+
+                const file = new File(
+                    [blob],
+                    'trainlog-wrapped-{{ data.year }}.png',
+                    { type: 'image/png' }
+                );
+
+                const data = { files: [file], title: 'Trainlog Wrapped {{ data.year }}', text: 'My Trainlog Wrapped {{ data.year }}' };
+
+                if (navigator.share && navigator.canShare?.(data)) {
+                    await navigator.share(data);
+                } else {
+                    const a = document.createElement("a");
+                    a.download = file.name;
+                    a.href = URL.createObjectURL(blob);
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                }
+
+            } catch (error) {
+                console.error('Error generating image:', error);
+                alert('{{ wrapped_download_error or "Error generating image. Please try again." }}');
+            }
+
+            button.disabled = false;
+
+            if (navigator.share && navigator.canShare) {
+                    button.innerHTML = `
+                        <i class="fa-solid fa-share-nodes"></i>
+                        {{ wrapped_share_image or "Share image" }}
+                    `;
+                }
+            else{
+                button.innerHTML = '<i class="fa-solid fa-download"></i> {{ wrapped_download_image or "Download image" }}';
+            }
+        });
+    </script>
+    
+    {% else %}
+    <div class="no-data">
+        <h2>
+            {{ wrapped_no_trips or "No trips recorded for" }}
+            {{ data.year }}
+        </h2>
+        <p>
+            {{ wrapped_start_logging or "Start logging your journeys to see your wrapped!" }}
+        </p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

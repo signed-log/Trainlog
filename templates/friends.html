@@ -160,18 +160,16 @@ function unfriend(friendId, friendName, type) {
 
 function confirmUnfriend() {
     var friendId = $('#confirmationModal').data('friendId');
-    location.href = `u/${encodeURIComponent("{{username}}")}/cancelFriendship/${encodeURIComponent(friendId)}`;
-
-    // Close the modal after the action
+    location.href = `cancelFriendship/${encodeURIComponent(friendId)}`;
     $('#confirmationModal').modal('hide');
 }
 
 function acceptFriend(friendId){
-    location.href = `u/${encodeURIComponent("{{username}}")}/acceptFriendship/${encodeURIComponent(friendId)}`;
+    location.href = `acceptFriendship/${encodeURIComponent(friendId)}`;
 }
 
 function sendFriendRequest(username, friendId) {
-    location.href = `u/${encodeURIComponent(username)}/requestFriend/${encodeURIComponent(friendId)}`;
+    location.href = `requestFriend/${encodeURIComponent(friendId)}`;
 }
 
 

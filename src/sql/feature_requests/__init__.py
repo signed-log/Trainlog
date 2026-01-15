@@ -27,3 +27,10 @@ list_voters = SqlTemplate("src/sql/feature_requests/list_voters.sql")
 
 merge_votes_into_target = SqlTemplate("src/sql/feature_requests/merge_votes_into_target.sql")
 update_feature_request_status_with_reason = SqlTemplate("src/sql/feature_requests/update_feature_request_status_with_reason.sql")
+
+# Comments queries
+list_comments = SqlTemplate("src/sql/feature_requests/list_comments.sql")
+insert_comment = SqlTemplate("src/sql/feature_requests/insert_comment.sql")
+update_comment = SqlTemplate("src/sql/feature_requests/update_comment.sql")
+delete_comment = SqlTemplate("src/sql/feature_requests/delete_comment.sql")
+get_comment_author = SqlTemplate("src/sql/feature_requests/get_comment_author.sql")

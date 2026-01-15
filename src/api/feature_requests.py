@@ -505,3 +505,176 @@ def merge_feature_requests(username):
         _close_feature_request_and_notify(source_id, "merged", merge_reason)
     
     return redirect(url_for("feature_requests.single_feature_request", request_id=target_id))
+
+@feature_requests_blueprint.route("/feature_requests/<int:request_id>/comments")
+def get_comments(request_id):
+    """Get all comments for a feature request as JSON"""
+    with pg_session() as pg:
+        result = pg.execute(
+            fr_sql.list_comments(),
+            {"request_id": request_id}
+        ).fetchall()
+        
+        comments = []
+        for row in result:
+            comments.append({
+                'id': row[0],
+                'feature_request_id': row[1],
+                'parent_id': row[2],
+                'username': 'admin' if row[3] == owner else row[3],
+                'raw_username': row[3],
+                'content': row[4],
+                'created': row[5].isoformat() if row[5] else None,
+                'modified': row[6].isoformat() if row[6] else None
+            })
+    
+    return jsonify(comments)
+
+
+@feature_requests_blueprint.route("/u/<username>/feature_requests/<int:request_id>/comment", methods=["POST"])
+@login_required
+def add_comment(username, request_id):
+    """Add a new comment to a feature request"""
+    content = request.form.get("content", "").strip()
+    parent_id = request.form.get("parent_id") or None
+    current_user = session["userinfo"]["logged_in_user"]
+    display_name = 'admin' if current_user == owner else current_user
+    
+    if not content:
+        return jsonify({"error": "Content required"}), 400
+    
+    if parent_id:
+        parent_id = int(parent_id)
+    
+    with pg_session() as pg:
+        result = pg.execute(
+            fr_sql.insert_comment(),
+            {
+                "request_id": request_id,
+                "parent_id": parent_id,
+                "username": current_user,
+                "content": content
+            }
+        ).fetchone()
+        
+        comment_id = result[0] if result else None
+        
+        # Get FR author for notification
+        fr_author_row = pg.execute(
+            fr_sql.get_feature_request_author(),
+            {"request_id": request_id}
+        ).fetchone()
+        fr_author = fr_author_row[0] if fr_author_row else None
+        
+        notified_users = set()
+        
+        # Notify FR author on new top-level comment (not reply)
+        if not parent_id and fr_author and fr_author != current_user:
+            try:
+                user = User.query.filter_by(username=fr_author).first()
+                if user:
+                    notified_users.add(fr_author)
+                    user_lang = user.lang
+                    subject = lang[user_lang].get('feature_requests_comment_new_subject', 'New comment on your feature request')
+                    message = f"{lang[user_lang].get('fr_email_greeting', 'Hi {username}').format(username=fr_author)}<br><br>"
+                    message += f"{display_name} {lang[user_lang].get('feature_requests_comment_new_body', 'commented on your feature request')}:<br><br>"
+                    message += f"<i>\"{content[:200]}{'...' if len(content) > 200 else ''}\"</i><br><br>"
+                    message += f"<a href=\"{url_for('feature_requests.single_feature_request', request_id=request_id, _external=True)}\">{lang[user_lang].get('feature_requests_comment_view_link', 'View the conversation')}</a>"
+                    sendEmailToUser(get_user_id(fr_author), subject, message)
+            except Exception as e:
+                logger.exception("Failed to send FR comment notification: %s", e)
+        
+        # Notify parent comment author on reply
+        if parent_id and comment_id:
+            parent_info = pg.execute(
+                fr_sql.get_comment_author(),
+                {"comment_id": parent_id}
+            ).fetchone()
+            
+            if parent_info and parent_info[0] != current_user and parent_info[0] not in notified_users:
+                try:
+                    parent_author = parent_info[0]
+                    user = User.query.filter_by(username=parent_author).first()
+                    if user:
+                        user_lang = user.lang
+                        subject = lang[user_lang].get('feature_requests_comment_reply_subject', 'Someone replied to your comment')
+                        message = f"{lang[user_lang].get('fr_email_greeting', 'Hi {username}').format(username=parent_author)}<br><br>"
+                        message += f"{display_name} {lang[user_lang].get('feature_requests_comment_reply_body', 'replied to your comment')}:<br><br>"
+                        message += f"<i>\"{content[:200]}{'...' if len(content) > 200 else ''}\"</i><br><br>"
+                        message += f"<a href=\"{url_for('feature_requests.single_feature_request', request_id=request_id, _external=True)}\">{lang[user_lang].get('feature_requests_comment_view_link', 'View the conversation')}</a>"
+                        sendEmailToUser(get_user_id(parent_author), subject, message)
+                except Exception as e:
+                    logger.exception("Failed to send comment notification: %s", e)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({"success": True, "comment_id": comment_id})
+    
+    return redirect(url_for("feature_requests.single_feature_request", request_id=request_id))
+
+
+@feature_requests_blueprint.route("/u/<username>/feature_requests/comment/<int:comment_id>/edit", methods=["POST"])
+@login_required
+def edit_comment(username, comment_id):
+    """Edit a comment (owner can edit any, users can edit their own)"""
+    content = request.form.get("content", "").strip()
+    current_user = session["userinfo"]["logged_in_user"]
+    is_owner_user = session["userinfo"].get("is_owner", False)
+    
+    if not content:
+        return jsonify({"error": "Content required"}), 400
+    
+    with pg_session() as pg:
+        author_info = pg.execute(
+            fr_sql.get_comment_author(),
+            {"comment_id": comment_id}
+        ).fetchone()
+        
+        if not author_info:
+            return jsonify({"error": "Comment not found"}), 404
+        
+        if not is_owner_user and author_info[0] != current_user:
+            return jsonify({"error": "Not authorized"}), 403
+        
+        request_id = author_info[1]
+        
+        pg.execute(
+            fr_sql.update_comment(),
+            {"comment_id": comment_id, "content": content}
+        )
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({"success": True})
+    
+    return redirect(url_for("feature_requests.single_feature_request", request_id=request_id))
+
+
+@feature_requests_blueprint.route("/u/<username>/feature_requests/comment/<int:comment_id>/delete", methods=["POST"])
+@login_required
+def delete_comment(username, comment_id):
+    """Delete a comment (owner can delete any, users can delete their own)"""
+    current_user = session["userinfo"]["logged_in_user"]
+    is_owner_user = session["userinfo"].get("is_owner", False)
+    
+    with pg_session() as pg:
+        author_info = pg.execute(
+            fr_sql.get_comment_author(),
+            {"comment_id": comment_id}
+        ).fetchone()
+        
+        if not author_info:
+            return jsonify({"error": "Comment not found"}), 404
+        
+        if not is_owner_user and author_info[0] != current_user:
+            return jsonify({"error": "Not authorized"}), 403
+        
+        request_id = author_info[1]
+        
+        pg.execute(
+            fr_sql.delete_comment(),
+            {"comment_id": comment_id}
+        )
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({"success": True})
+    
+    return redirect(url_for("feature_requests.single_feature_request", request_id=request_id))
