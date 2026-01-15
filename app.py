@@ -211,7 +211,8 @@ from src.utils import (
     public_required,
     translator_required,
     check_and_increment_fr24_usage,
-    fr24_usage
+    fr24_usage,
+    get_default_trip_visibility
 )
 from src.trips import (
     Trip,
@@ -1116,7 +1117,6 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationStationName"
         ]
-        trip_visibility="public"
 
     elif vehicle_type == "tram":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
@@ -1127,7 +1127,6 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationStationName"
         ]
-        trip_visibility="public"
 
     elif vehicle_type == "metro":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
@@ -1138,7 +1137,6 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationStationName"
         ]
-        trip_visibility="public"
 
     elif vehicle_type == "bus":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
@@ -1151,7 +1149,6 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationBusStationName"
         ]
-        trip_visibility="public"
 
     elif vehicle_type == "ferry":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
@@ -1166,7 +1163,6 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationFerryTerminalName"
         ]
-        trip_visibility="public"
 
     elif vehicle_type == "accommodation":
         new_trip = lang[session["userinfo"]["lang"]]["newAccommodation"]
@@ -1175,7 +1171,6 @@ def new(username, vehicle_type):
         manual_origin = lang[session["userinfo"]["lang"]]["manualAccommodation"]
         destination_terminal = ""
         destination_terminal_name = ""
-        trip_visibility="private"
 
     elif vehicle_type == "poi":
         new_trip = lang[session["userinfo"]["lang"]]["newPoi"]
@@ -1184,7 +1179,6 @@ def new(username, vehicle_type):
         manual_origin = lang[session["userinfo"]["lang"]]["manualPoi"]
         destination_terminal = ""
         destination_terminal_name = ""
-        trip_visibility="private"
 
     elif vehicle_type == "restaurant":
         new_trip = lang[session["userinfo"]["lang"]]["newRestaurant"]
@@ -1193,7 +1187,6 @@ def new(username, vehicle_type):
         manual_origin = lang[session["userinfo"]["lang"]]["manualRestaurant"]
         destination_terminal = ""
         destination_terminal_name = ""
-        trip_visibility="private"
 
     elif vehicle_type == "helicopter":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
@@ -1204,7 +1197,6 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationHelipadName"
         ]
-        trip_visibility="public"
 
     elif vehicle_type == "car":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
@@ -1215,7 +1207,6 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationCarName"
         ]
-        trip_visibility="private"
 
     elif vehicle_type == "walk":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
@@ -1226,7 +1217,6 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationWalkName"
         ]
-        trip_visibility="private"
 
     elif vehicle_type == "cycle":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
@@ -1237,7 +1227,6 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationBikeName"
         ]
-        trip_visibility="private"
 
     elif vehicle_type == "aerialway":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
@@ -1248,7 +1237,6 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationAerialwayName"
         ]
-        trip_visibility="public"
 
     return render_template(
         "new.html",
@@ -1262,7 +1250,7 @@ def new(username, vehicle_type):
         originTerminalName=origin_terminal_name,
         destinationTerminal=destination_terminal,
         destinationTerminalName=destination_terminal_name,
-        trip_visibility=trip_visibility,
+        trip_visibility=get_default_trip_visibility(vehicle_type),
         manualOrigin=manual_origin,
         currencyOptions=get_available_currencies(),
         user_currency=getLoggedUserCurrency(),
@@ -5580,6 +5568,7 @@ def mergeTrips(username, tripIds):
     newTrip["destinationManualLat"] = None
     newTrip["destinationManualLng"] = None
 
+
     try:
         saveTripToDb(username, newTrip, final_path, tripType)
         return redirect(
@@ -6789,6 +6778,11 @@ def importAll(username):
     if end_datetime in [-1, 1, "-1", "1"]:
         end_datetime = None
 
+    if dataDict.get("visibility") in ("public", "friends", "private"):
+        visibility = dataDict["visibility"]
+    else:
+        visibility = get_default_trip_visibility(sanitize_param(dataDict["type"]))
+
     trip = Trip(
         trip_id=None,
         username=sanitize_param(dataDict["username"]),
@@ -6818,6 +6812,7 @@ def importAll(username):
         purchasing_date=sanitize_param(dataDict["purchasing_date"]),
         ticket_id=sanitize_param(dataDict["ticket_id"]),
         is_project=dataDict["start_datetime"] == 1 or dataDict["end_datetime"] == 1,
+        visibility=visibility,
         path=path,
     )
 
