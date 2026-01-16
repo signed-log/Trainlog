@@ -114,7 +114,7 @@
 
 <div class="multiLink">
     <button class="btn btn-secondary btn-lg multiCancel" onclick="deselectAll();">✕</button>
-    <button type="button" class="btn btn-primary btn-lg multiTrip">{{ shareTrip }}</button>
+    <button id="shareTripButton" type="button" class="btn btn-primary btn-lg multiTrip">{{ shareTrip }}</button>
     <div class="btn-group dropup">
         <button type="button" class="btn btn-lg dropdown-toggle btn-secondary multiDropdown" data-bs-toggle="dropdown" aria-expanded="false"></button>
         <ul class="dropdown-menu" style="min-width: 12rem;">
@@ -215,6 +215,29 @@
   </div>
 </div>
 
+<div class="modal fade" id="shareTripsMakePublicModal" tabindex="-1" role="dialog" aria-labelledby="shareTripsMakePublicModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="shareTripsMakePublicModalLabel">{{shareTrip}}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <span>Some of the selected trips are not public. Do you want to make them public now?</span>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="shareTripsLeaveAsIsButton" class="btn btn-primary" style="height: 38px">
+            <span id="shareTripsLeaveAsIsButtonLabel">Leave as is</span>
+        </button>
+        <button type="button" id="shareTripsMakePublicButton" class="btn btn-success" style="height: 38px">
+            <span id="shareTripsMakePublicButtonLabel">Make public</span>
+            <span id="shareTripsMakePublicSpinner" class="spinner-border spinner-border-sm" role="status" style="display:none"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal fade" id="tagSearchModal" tabindex="-1" role="dialog" aria-labelledby="tagSearchModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -242,7 +265,8 @@
 
 <script src="{{ url_for('static', filename='js/util.js') }}"></script>
 <script type="text/javascript">
-var checkedTrips = [];
+const checkedTrips = [];
+const checkedTripData = {};
 
 function toggleTypeFilter() {
     const switchState = document.getElementById('filterTypeSwitch').checked;
@@ -738,6 +762,7 @@ var table = $('#tripRows');
     selectedRows.forEach(function(row) {
         if (!checkedTrips.includes(row.uid)) {
             checkedTrips.push(row.uid);
+            checkedTripData[row.uid] = row;
         }
     });
     showMultilink();
@@ -748,6 +773,7 @@ var table = $('#tripRows');
         var index = checkedTrips.indexOf(row.uid);
         if (index !== -1) {
             checkedTrips.splice(index, 1);
+            delete checkedTripData[row.uid]
         }
     });
     if (checkedTrips.length == 0) {
@@ -862,11 +888,61 @@ $('.deleteButton').off('click').on('click', function() {
     
 }
 
-const btn = document.querySelector('.multiTrip'),
-      trips_url = "{{ url_for('public_trip', tripIds='') }}";
-btn.onmousedown = e => e.button===1 && e.preventDefault();
-btn.onclick = () => window.open(trips_url+checkedTrips, '_self','noopener');
-btn.onauxclick = e => e.button===1 && (e.preventDefault(), window.open(trips_url+checkedTrips,'_blank','noopener'));
+function shareTrips(openInNewTab) {
+    const isAllPublic = Object.values(checkedTripData).every(trip => trip.visibility === 'public');
+    if(isAllPublic) {
+        window.open("{{ url_for('public_trip', tripIds='') }}" + checkedTrips, openInNewTab ? '_blank' : '_self', 'noopener')
+        return;
+    }
+
+    document.getElementById('shareTripsMakePublicModal').setAttribute('data-new-tab', openInNewTab ? 'true' : 'false')
+    $('#shareTripsMakePublicModal').modal('show');
+}
+
+function shareTripsLeaveAsIs() {
+    const openInNewTab = document.getElementById('shareTripsMakePublicModal').getAttribute('data-new-tab') === 'true';
+    window.open("{{ url_for('public_trip', tripIds='') }}" + checkedTrips, openInNewTab ? '_blank' : '_self', 'noopener')
+    $('#shareTripsMakePublicModal').modal('hide');
+}
+
+function shareTripsMakePublic() {
+    const openInNewTab = document.getElementById('shareTripsMakePublicModal').getAttribute('data-new-tab') === 'true';
+
+    document.getElementById('shareTripsMakePublicButtonLabel').style.display = 'none';
+    document.getElementById('shareTripsMakePublicSpinner').style.display = ''
+
+    const changeVisibilityUrl = `{{ url_for('bulkChangeVisibility', username=username)}}`;
+
+    const urlParams = new URLSearchParams();
+    urlParams.append('trips', checkedTrips);
+    urlParams.append('visibility', 'public');
+
+    fetch(`${changeVisibilityUrl}?${urlParams.toString()}`).finally(() => {
+        tableObject.ajax.reload();
+        window.open("{{ url_for('public_trip', tripIds='') }}" + checkedTrips, openInNewTab ? '_blank' : '_self', 'noopener')
+        for (let trip of Object.values(checkedTripData)) {
+            trip.visibility = 'public';
+        }
+
+         $('#shareTripsMakePublicModal').modal('hide');
+        document.getElementById('shareTripsMakePublicButtonLabel').style.display = '';
+        document.getElementById('shareTripsMakePublicSpinner').style.display = 'none'
+    });
+}
+
+const shareTripBtn = document.getElementById('shareTripButton');
+shareTripBtn.addEventListener('mousedown', (e) => {
+    if(e.button === 1) e.preventDefault();
+})
+shareTripBtn.addEventListener('auxclick', (e) => {
+    if(e.button === 1) e.preventDefault();
+    shareTrips(true);
+})
+shareTripBtn.addEventListener('click', (e) => {
+    shareTrips(e.ctrlKey);
+})
+document.getElementById('shareTripsLeaveAsIsButton').addEventListener('click', shareTripsLeaveAsIs)
+document.getElementById('shareTripsMakePublicButton').addEventListener('click', shareTripsMakePublic)
 
 function processDelete(id){
     $.post({
@@ -948,6 +1024,10 @@ function bulkChangeVisibility(visibility){
     fetch(`${url}?${urlParams.toString()}`).finally(() => {
         tableObject.ajax.reload();
         $('#changeVisibilityModal').modal('hide');
+
+        for (let trip of Object.values(checkedTripData)) {
+            trip.visibility = visibility;
+        }
 
         setTimeout(() => {
             document.getElementById('changeVisibilitySubmit').removeAttribute('disabled');
