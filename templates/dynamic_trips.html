@@ -223,14 +223,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <span>Some of the selected trips are not public. Do you want to make them public now?</span>
+        <span>{{ share_trips_some_trips_not_public }}</span>
       </div>
       <div class="modal-footer">
         <button type="button" id="shareTripsLeaveAsIsButton" class="btn btn-primary" style="height: 38px">
-            <span id="shareTripsLeaveAsIsButtonLabel">Leave as is</span>
+            <span id="shareTripsLeaveAsIsButtonLabel">{{share_trips_leave_as_is}}</span>
         </button>
         <button type="button" id="shareTripsMakePublicButton" class="btn btn-success" style="height: 38px">
-            <span id="shareTripsMakePublicButtonLabel">Make public</span>
+            <span id="shareTripsMakePublicButtonLabel">{{share_trips_make_public}}</span>
             <span id="shareTripsMakePublicSpinner" class="spinner-border spinner-border-sm" role="status" style="display:none"></span>
         </button>
       </div>

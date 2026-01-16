@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Reason:",
     "fr_email_english_note": "Note: Technical details and reasons are provided in English to ensure readability for our international userbase.",
     "fr_email_signature": "Kindest regards<br>The Trainlog Team",
+    "visibility": "Visibility",
+    "visibility_select": "Select visibility",
+    "visibility_public": "Public",
+    "visibility_friends": "Friends",
+    "visibility_private": "Private",
+    "bulk_change_visibility": "Set Visibility",
+    "share_trips_some_trips_not_public": "Some of the selected trips are not public. Do you want to make them public now?",
+    "share_trips_leave_as_is": "Leave as is",
+    "share_trips_make_public": "Make public",
     "wrapped_title": "RECAP",
     "wrapped_your_year": "Your Year",
     "wrapped_in_travel": "in Travel",
@@ -730,11 +739,5 @@
     "email_premium_title": "Premium feature",
     "email_premium_greeting": "Hi {username},",
     "email_premium_description": "Email ticket parsing is a premium feature available to Trainlogger members and above.",
-    "email_premium_cta": "Become a member",
-    "visibility": "Visibility",
-    "visibility_select": "Select visibility",
-    "visibility_public": "Public",
-    "visibility_friends": "Friends",
-    "visibility_private": "Private",
-    "bulk_change_visibility": "Set Visibility"
+    "email_premium_cta": "Become a member"
 }
