@@ -11,6 +11,29 @@ def table_exists(cursor, table_name):
     return cursor.fetchone()[0] == 1
 
 
+def set_trips_visibility(cursor):
+    cursor.execute("""
+    UPDATE trip SET visibility =
+        CASE TYPE
+            WHEN 'accommodation' THEN 'private'
+            WHEN 'aerialway' THEN 'public'
+            WHEN 'bus' THEN 'public'
+            WHEN 'car' THEN 'private'
+            WHEN 'cycle' THEN 'private'
+            WHEN 'ferry' THEN 'public'
+            WHEN 'helicopter' THEN 'public'
+            WHEN 'metro' THEN 'public'
+            WHEN 'poi' THEN 'private'
+            WHEN 'restaurant' THEN 'private'
+            WHEN 'train' THEN 'public'
+            WHEN 'tram' THEN 'public'
+            WHEN 'walk' THEN 'public'
+            ELSE 'public'
+        END
+    WHERE visibility IS NULL;
+    """)
+
+
 def init_data(path):
     lock_file = "init_data.lock"
 
@@ -40,7 +63,10 @@ def init_data(path):
                     df.to_sql(table_name, conn, if_exists="replace", index=False)
                     print(f"Table '{table_name}' created successfully.")
 
-        # Commit the changes and close the connection
+        # migrate trip visibility (set default value)
+        set_trips_visibility(cursor)
+
+        # Commit the changes
         conn.commit()
         conn.close()
         if os.path.exists(lock_file):
@@ -167,7 +193,7 @@ def init_main(path):
         ("ticket_id", "INT"),
         ("currency", "TEXT"),
         ("purchasing_date", "DATETIME"),
-        ("visibility", "TEXT")
+        ("visibility", "TEXT"),
     ]
     manual_stations_columns = [
         ("uid", "INTEGER NOT NULL UNIQUE"),
