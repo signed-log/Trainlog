@@ -643,6 +643,15 @@
     "fr_email_reason_label": "理由：",
     "fr_email_english_note": "注意: 技術的な詳細と理由は、国際的なユーザーベースの読みやすさを確保するために英語で提供されています。",
     "fr_email_signature": "よろしくお願い申し上げます<br>Trainlogチーム",
+    "visibility": "可視性",
+    "visibility_select": "可視性を選択",
+    "visibility_public": "パブリック",
+    "visibility_friends": "友達",
+    "visibility_private": "プライベート",
+    "bulk_change_visibility": "公開設定を設定",
+    "share_trips_some_trips_not_public": "選択された旅行のいくつかは公開されていません。今すぐ公開しますか？",
+    "share_trips_leave_as_is": "そのままにする",
+    "share_trips_make_public": "公開する",
     "wrapped_title": "要約",
     "wrapped_your_year": "あなたの年",
     "wrapped_in_travel": "旅行で",
@@ -730,11 +739,5 @@
     "email_premium_title": "プレミアム機能",
     "email_premium_greeting": "こんにちは {username},",
     "email_premium_description": "メールチケット解析は、Trainloggerメンバー以上が利用できるプレミアム機能です。",
-    "email_premium_cta": "メンバーになる",
-    "visibility": "可視性",
-    "visibility_select": "可視性を選択",
-    "visibility_public": "パブリック",
-    "visibility_friends": "友達",
-    "visibility_private": "プライベート",
-    "bulk_change_visibility": "公開設定を設定"
+    "email_premium_cta": "メンバーになる"
 }

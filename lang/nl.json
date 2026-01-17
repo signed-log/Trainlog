@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Reden:",
     "fr_email_english_note": "Opmerking: Technische details en redenen worden in het Engels verstrekt om de leesbaarheid voor onze internationale gebruikersbasis te garanderen.",
     "fr_email_signature": "Met vriendelijke groeten<br>Het Trainlog-team",
+    "visibility": "Zichtbaarheid",
+    "visibility_select": "Selecteer zichtbaarheid",
+    "visibility_public": "Openbaar",
+    "visibility_friends": "Vrienden",
+    "visibility_private": "Privé",
+    "bulk_change_visibility": "Verander zichtbaarheid",
+    "share_trips_some_trips_not_public": "Sommige van de geselecteerde reizen zijn niet openbaar. Wilt u ze nu openbaar maken?",
+    "share_trips_leave_as_is": "Laat zoals het is",
+    "share_trips_make_public": "Openbaar maken",
     "wrapped_title": "SAMENVATTING",
     "wrapped_your_year": "Jouw jaar",
     "wrapped_in_travel": "in reizen",
@@ -730,11 +739,5 @@
     "email_premium_title": "Premiumfunctie",
     "email_premium_greeting": "Hallo {username},",
     "email_premium_description": "E-mailticketverwerking is een premiumfunctie beschikbaar voor Trainlogger-leden en hoger.",
-    "email_premium_cta": "Lid worden",
-    "visibility": "Zichtbaarheid",
-    "visibility_select": "Selecteer zichtbaarheid",
-    "visibility_public": "Openbaar",
-    "visibility_friends": "Vrienden",
-    "visibility_private": "Privé",
-    "bulk_change_visibility": "Verander zichtbaarheid"
+    "email_premium_cta": "Lid worden"
 }

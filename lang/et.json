@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Põhjus:",
     "fr_email_english_note": "Märkus: Tehnilised üksikasjad ja põhjused on esitatud inglise keeles, et tagada loetavus meie rahvusvahelisele kasutajaskonnale.",
     "fr_email_signature": "Parimate soovidega<br>Trainlogi meeskond",
+    "visibility": "Nähtavus",
+    "visibility_select": "Vali nähtavus",
+    "visibility_public": "Avalik",
+    "visibility_friends": "Sõbrad",
+    "visibility_private": "Privaatne",
+    "bulk_change_visibility": "Nähtavuse määramine",
+    "share_trips_some_trips_not_public": "Mõned valitud reisid ei ole avalikud. Kas soovite need nüüd avalikustada?",
+    "share_trips_leave_as_is": "Jätta nagu on",
+    "share_trips_make_public": "Muuda avalikuks",
     "wrapped_title": "KOKKUVÕTE",
     "wrapped_your_year": "Sinu Aasta",
     "wrapped_in_travel": "Reisimisel",
@@ -730,11 +739,5 @@
     "email_premium_title": "Premiumfunktsioon",
     "email_premium_greeting": "Tere {username},",
     "email_premium_description": "E-kirja piletite töötlemine on premiumfunktsioon, mis on saadaval Trainloggeri liikmetele ja kõrgematele.",
-    "email_premium_cta": "Hakka liikmeks",
-    "visibility": "Nähtavus",
-    "visibility_select": "Vali nähtavus",
-    "visibility_public": "Avalik",
-    "visibility_friends": "Sõbrad",
-    "visibility_private": "Privaatne",
-    "bulk_change_visibility": "Nähtavuse määramine"
+    "email_premium_cta": "Hakka liikmeks"
 }

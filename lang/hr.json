@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Razlog:",
     "fr_email_english_note": "Napomena: Tehnički detalji i razlozi su navedeni na engleskom jeziku kako bi osigurali čitljivost za našu međunarodnu bazu korisnika.",
     "fr_email_signature": "Srdačan pozdrav<br>Tim Trainlog",
+    "visibility": "Vidljivost",
+    "visibility_select": "Odaberite vidljivost",
+    "visibility_public": "Javno",
+    "visibility_friends": "Prijatelji",
+    "visibility_private": "Privatno",
+    "bulk_change_visibility": "Postavi vidljivost",
+    "share_trips_some_trips_not_public": "Neka od odabranih putovanja nisu javna. Želite li ih sada učiniti javnima?",
+    "share_trips_leave_as_is": "Ostaviti kako jest",
+    "share_trips_make_public": "Učiniti javnim",
     "wrapped_title": "SAŽETAK",
     "wrapped_your_year": "Tvoja Godina",
     "wrapped_in_travel": "u Putovanju",
@@ -730,11 +739,5 @@
     "email_premium_title": "Premium značajka",
     "email_premium_greeting": "Bok {username},",
     "email_premium_description": "Raščlamba email karata je premium značajka dostupna članovima Trainloggera i višima.",
-    "email_premium_cta": "Postani član",
-    "visibility": "Vidljivost",
-    "visibility_select": "Odaberite vidljivost",
-    "visibility_public": "Javno",
-    "visibility_friends": "Prijatelji",
-    "visibility_private": "Privatno",
-    "bulk_change_visibility": "Postavi vidljivost"
+    "email_premium_cta": "Postani član"
 }

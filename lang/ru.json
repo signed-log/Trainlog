@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Причина:",
     "fr_email_english_note": "Примечание: Технические детали и причины предоставлены на английском языке для обеспечения читаемости нашей международной пользовательской базы.",
     "fr_email_signature": "С наилучшими пожеланиями<br>Команда Trainlog",
+    "visibility": "Видимость",
+    "visibility_select": "Выберите видимость",
+    "visibility_public": "Общедоступный",
+    "visibility_friends": "Друзья",
+    "visibility_private": "Частный",
+    "bulk_change_visibility": "Установить видимость",
+    "share_trips_some_trips_not_public": "Некоторые из выбранных поездок не являются публичными. Вы хотите сделать их публичными сейчас?",
+    "share_trips_leave_as_is": "Оставить как есть",
+    "share_trips_make_public": "Сделать публичным",
     "wrapped_title": "РЕЗЮМЕ",
     "wrapped_your_year": "Ваш год",
     "wrapped_in_travel": "в путешествии",
@@ -730,11 +739,5 @@
     "email_premium_title": "Премиум функция",
     "email_premium_greeting": "Привет {username},",
     "email_premium_description": "Разбор билетов из электронной почты - это премиум функция, доступная участникам Trainlogger и выше.",
-    "email_premium_cta": "Станьте участником",
-    "visibility": "Видимость",
-    "visibility_select": "Выберите видимость",
-    "visibility_public": "Общедоступный",
-    "visibility_friends": "Друзья",
-    "visibility_private": "Частный",
-    "bulk_change_visibility": "Установить видимость"
+    "email_premium_cta": "Станьте участником"
 }

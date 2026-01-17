@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Anledning:",
     "fr_email_english_note": "Obs: Tekniska detaljer och anledningar ges på engelska för att säkerställa läsbarhet för vår internationella användarbas.",
     "fr_email_signature": "Vänliga hälsningar<br>Trainlog-teamet",
+    "visibility": "Synlighet",
+    "visibility_select": "Välj synlighet",
+    "visibility_public": "Offentlig",
+    "visibility_friends": "Vänner",
+    "visibility_private": "Privat",
+    "bulk_change_visibility": "Ställ in synlighet",
+    "share_trips_some_trips_not_public": "Några av de valda resorna är inte offentliga. Vill du göra dem offentliga nu?",
+    "share_trips_leave_as_is": "Lämna som det är",
+    "share_trips_make_public": "Gör offentlig",
     "wrapped_title": "SAMMANFATTNING",
     "wrapped_your_year": "Ditt År",
     "wrapped_in_travel": "i Resa",
@@ -730,11 +739,5 @@
     "email_premium_title": "Premiumfunktion",
     "email_premium_greeting": "Hej {username},",
     "email_premium_description": "E-postbiljettbearbetning är en premiumfunktion tillgänglig för Trainlogger-medlemmar och ovan.",
-    "email_premium_cta": "Bli medlem",
-    "visibility": "Synlighet",
-    "visibility_select": "Välj synlighet",
-    "visibility_public": "Offentlig",
-    "visibility_friends": "Vänner",
-    "visibility_private": "Privat",
-    "bulk_change_visibility": "Ställ in synlighet"
+    "email_premium_cta": "Bli medlem"
 }

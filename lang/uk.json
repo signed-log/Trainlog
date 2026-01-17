@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Причина:",
     "fr_email_english_note": "Примітка: Технічні деталі та причини надаються англійською мовою, щоб забезпечити зрозумілість для нашої міжнародної аудиторії користувачів.",
     "fr_email_signature": "З найкращими побажаннями<br>Команда Trainlog",
+    "visibility": "Видимість",
+    "visibility_select": "Виберіть видимість",
+    "visibility_public": "Для всіх",
+    "visibility_friends": "Друзі",
+    "visibility_private": "Приватний",
+    "bulk_change_visibility": "Встановити видимість",
+    "share_trips_some_trips_not_public": "Деякі з обраних поїздок не є публічними. Бажаєте зробити їх публічними зараз?",
+    "share_trips_leave_as_is": "Залишити як є",
+    "share_trips_make_public": "Зробити публічним",
     "wrapped_title": "РЕЗЮМЕ",
     "wrapped_your_year": "Твій Рік",
     "wrapped_in_travel": "в Подорожі",
@@ -730,11 +739,5 @@
     "email_premium_title": "Преміум функція",
     "email_premium_greeting": "Привіт {username},",
     "email_premium_description": "Розбір квитків з електронної пошти - це преміум функція, доступна учасникам Trainlogger та вище.",
-    "email_premium_cta": "Станьте учасником",
-    "visibility": "Видимість",
-    "visibility_select": "Виберіть видимість",
-    "visibility_public": "Для всіх",
-    "visibility_friends": "Друзі",
-    "visibility_private": "Приватний",
-    "bulk_change_visibility": "Встановити видимість"
+    "email_premium_cta": "Станьте учасником"
 }

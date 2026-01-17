@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Årsag:",
     "fr_email_english_note": "Bemærk: Tekniske detaljer og årsager leveres på engelsk for at sikre læsbarhed for vores internationale brugerbase.",
     "fr_email_signature": "Venlig hilsen<br>Trainlog-teamet",
+    "visibility": "Synlighed",
+    "visibility_select": "Vælg synlighed",
+    "visibility_public": "Offentlig",
+    "visibility_friends": "Venner",
+    "visibility_private": "Privat",
+    "bulk_change_visibility": "Indstil synlighed",
+    "share_trips_some_trips_not_public": "Nogle af de valgte rejser er ikke offentlige. Ønsker du at gøre dem offentlige nu?",
+    "share_trips_leave_as_is": "Behold som det er",
+    "share_trips_make_public": "Gøre offentlig",
     "wrapped_title": "RESUMÉ",
     "wrapped_your_year": "Dit år",
     "wrapped_in_travel": "i rejse",
@@ -730,11 +739,5 @@
     "email_premium_title": "Premiumfunktion",
     "email_premium_greeting": "Hej {username},",
     "email_premium_description": "E-mail billetbehandling er en premiumfunktion tilgængelig for Trainlogger-medlemmer og derover.",
-    "email_premium_cta": "Bliv medlem",
-    "visibility": "Synlighed",
-    "visibility_select": "Vælg synlighed",
-    "visibility_public": "Offentlig",
-    "visibility_friends": "Venner",
-    "visibility_private": "Privat",
-    "bulk_change_visibility": "Indstil synlighed"
+    "email_premium_cta": "Bliv medlem"
 }

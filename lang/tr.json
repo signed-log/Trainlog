@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Sebep:",
     "fr_email_english_note": "Not: Teknik detaylar ve sebepler, uluslararası kullanıcı tabanımız için okunabilirliği sağlamak amacıyla İngilizce olarak sunulmaktadır.",
     "fr_email_signature": "En içten dileklerimizle<br>Trainlog Ekibi",
+    "visibility": "Görünürlük",
+    "visibility_select": "Görünürlüğü seçin",
+    "visibility_public": "Herkese açık",
+    "visibility_friends": "Arkadaşlar",
+    "visibility_private": "Gizli",
+    "bulk_change_visibility": "Görünürlüğü ayarla",
+    "share_trips_some_trips_not_public": "Seçilen gezilerin bazıları herkese açık değil. Şimdi herkese açık yapmak ister misiniz?",
+    "share_trips_leave_as_is": "Olduğu gibi bırak",
+    "share_trips_make_public": "Herkese açık yap",
     "wrapped_title": "ÖZET",
     "wrapped_your_year": "Senin Yılın",
     "wrapped_in_travel": "Seyahatte",
@@ -730,11 +739,5 @@
     "email_premium_title": "Premium özellik",
     "email_premium_greeting": "Merhaba {username},",
     "email_premium_description": "E-posta bilet çözümleme, Trainlogger üyeleri ve üzeri için mevcut bir premium özelliktir.",
-    "email_premium_cta": "Üye ol",
-    "visibility": "Görünürlük",
-    "visibility_select": "Görünürlüğü seçin",
-    "visibility_public": "Herkese açık",
-    "visibility_friends": "Arkadaşlar",
-    "visibility_private": "Gizli",
-    "bulk_change_visibility": "Görünürlüğü ayarla"
+    "email_premium_cta": "Üye ol"
 }

@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Ok:",
     "fr_email_english_note": "Megjegyzés: A technikai részletek és okok angolul vannak megadva, hogy biztosítsuk nemzetközi felhasználói bázisunk számára az olvashatóságot.",
     "fr_email_signature": "Üdvözlettel<br>A Trainlog csapat",
+    "visibility": "Láthatóság",
+    "visibility_select": "Láthatóság kiválasztása",
+    "visibility_public": "Nyilvános",
+    "visibility_friends": "Barátok",
+    "visibility_private": "Privát",
+    "bulk_change_visibility": "Láthatóság beállítása",
+    "share_trips_some_trips_not_public": "A kiválasztott utak közül néhány nem nyilvános. Nyilvánossá szeretné tenni őket most?",
+    "share_trips_leave_as_is": "Hagyni, ahogy van",
+    "share_trips_make_public": "Nyilvánossá tenni",
     "wrapped_title": "ÖSSZEFOGLALÁS",
     "wrapped_your_year": "Az éved",
     "wrapped_in_travel": "utazásban",
@@ -730,11 +739,5 @@
     "email_premium_title": "Prémium funkció",
     "email_premium_greeting": "Szia {username},",
     "email_premium_description": "Az emailes jegyek feldolgozása egy prémium funkció, amely a Trainlogger tagok és afelett érhetők el.",
-    "email_premium_cta": "Legyen tag",
-    "visibility": "Láthatóság",
-    "visibility_select": "Láthatóság kiválasztása",
-    "visibility_public": "Nyilvános",
-    "visibility_friends": "Barátok",
-    "visibility_private": "Privát",
-    "bulk_change_visibility": "Láthatóság beállítása"
+    "email_premium_cta": "Legyen tag"
 }

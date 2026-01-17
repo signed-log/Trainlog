@@ -643,6 +643,15 @@
     "fr_email_reason_label": "原因：",
     "fr_email_english_note": "注意：技术细节和原因以英语提供，以确保我们的国际用户群体能够阅读。",
     "fr_email_signature": "最诚挚的问候<br>Trainlog团队",
+    "visibility": "可见性",
+    "visibility_select": "选择可见性",
+    "visibility_public": "公开",
+    "visibility_friends": "朋友",
+    "visibility_private": "私人",
+    "bulk_change_visibility": "设置可见性",
+    "share_trips_some_trips_not_public": "某些选定的行程尚未公开。你想现在公开它们吗？",
+    "share_trips_leave_as_is": "保持原样",
+    "share_trips_make_public": "公开",
     "wrapped_title": "总结",
     "wrapped_your_year": "你的年度",
     "wrapped_in_travel": "在旅行中",
@@ -730,11 +739,5 @@
     "email_premium_title": "高级功能",
     "email_premium_greeting": "你好 {username},",
     "email_premium_description": "电子邮件票据解析是提供给 Trainlogger 会员及以上的高级功能。",
-    "email_premium_cta": "成为会员",
-    "visibility": "可见性",
-    "visibility_select": "选择可见性",
-    "visibility_public": "公开",
-    "visibility_friends": "朋友",
-    "visibility_private": "私人",
-    "bulk_change_visibility": "设置可见性"
+    "email_premium_cta": "成为会员"
 }

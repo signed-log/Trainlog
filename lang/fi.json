@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Syy:",
     "fr_email_english_note": "Huomaa: Teknisiä yksityiskohtia ja syitä annetaan Englanti varmistaaksemme kansainvälisen käyttäjäkuntamme luettavuuden.",
     "fr_email_signature": "Ystävällisin terveisin<br>Trainlog-tiimi",
+    "visibility": "Näkyvyys",
+    "visibility_select": "Valitse näkyvyys",
+    "visibility_public": "Julkinen",
+    "visibility_friends": "Ystävät",
+    "visibility_private": "Yksityinen",
+    "bulk_change_visibility": "Aseta näkyvyys",
+    "share_trips_some_trips_not_public": "Jotkut valituista matkoista eivät ole julkisia. Haluatko tehdä niistä julkisia nyt?",
+    "share_trips_leave_as_is": "Jätä ennalleen",
+    "share_trips_make_public": "Tee julkiseksi",
     "wrapped_title": "YHTEENVETO",
     "wrapped_your_year": "Vuotesi",
     "wrapped_in_travel": "Maailmalla",
@@ -730,11 +739,5 @@
     "email_premium_title": "Premium-ominaisuus",
     "email_premium_greeting": "Hei {username},",
     "email_premium_description": "Sähköpostilipun jäsennys on premium-ominaisuus, joka on saatavilla Trainlogger-jäsenille ja sitä ylemmille.",
-    "email_premium_cta": "Liity jäseneksi",
-    "visibility": "Näkyvyys",
-    "visibility_select": "Valitse näkyvyys",
-    "visibility_public": "Julkinen",
-    "visibility_friends": "Ystävät",
-    "visibility_private": "Yksityinen",
-    "bulk_change_visibility": "Aseta näkyvyys"
+    "email_premium_cta": "Liity jäseneksi"
 }

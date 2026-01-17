@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Grund:",
     "fr_email_english_note": "Note: Technisch Detail und Gründ wärde uf Englisch aagee, zum d'Lesbarkeit für üsi internationali Benutzerbasis sicherzstelle.",
     "fr_email_signature": "Fründlichi Grüess<br>S Trainlog Team",
+    "visibility": "Sichtbarkeit",
+    "visibility_select": "Sichtbarkeit auswählen",
+    "visibility_public": "Öffentlich",
+    "visibility_friends": "Freunde",
+    "visibility_private": "Privat",
+    "bulk_change_visibility": "Sichtbarkeit festlegen",
+    "share_trips_some_trips_not_public": "Eini vo de usgwählte Reisene sind nöd öffentlich. Wotsch derz wässig öfentlich mache?",
+    "share_trips_leave_as_is": "Loh blibe wies isch",
+    "share_trips_make_public": "Öffentlich mache",
     "wrapped_title": "ZÄSAMMEFASSIG",
     "wrapped_your_year": "Dini Johr",
     "wrapped_in_travel": "in Reise",
@@ -730,11 +739,5 @@
     "email_premium_title": "Premium-Funktion",
     "email_premium_greeting": "Hoi {username},",
     "email_premium_description": "E-Mail-Ticket-Verarbeitung isch e Premium-Funktion, verfügbor für Trainlogger-Mitglieder und dervo obe.",
-    "email_premium_cta": "Werde Mitglied",
-    "visibility": "Sichtbarkeit",
-    "visibility_select": "Sichtbarkeit auswählen",
-    "visibility_public": "Öffentlich",
-    "visibility_friends": "Freunde",
-    "visibility_private": "Privat",
-    "bulk_change_visibility": "Sichtbarkeit festlegen"
+    "email_premium_cta": "Werde Mitglied"
 }

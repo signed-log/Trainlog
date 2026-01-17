@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Raison :",
     "fr_email_english_note": "Remarque : Les détails techniques et les raisons sont fournis en anglais pour garantir la lisibilité à notre base d'utilisateurs internationale.",
     "fr_email_signature": "Cordialement<br>L'équipe Trainlog",
+    "visibility": "Visibilité",
+    "visibility_select": "Sélectionner la visibilité",
+    "visibility_public": "Public",
+    "visibility_friends": "Amis",
+    "visibility_private": "Privé",
+    "bulk_change_visibility": "Définir la visibilité",
+    "share_trips_some_trips_not_public": "Certaines des voyages sélectionnés ne sont pas publics. Voulez-vous les rendre publics maintenant ?",
+    "share_trips_leave_as_is": "Laisser tel quel",
+    "share_trips_make_public": "Rendre public",
     "wrapped_title": "RÉCAP",
     "wrapped_your_year": "Votre année",
     "wrapped_in_travel": "de voyages",
@@ -730,11 +739,5 @@
     "email_premium_title": "Fonctionnalité premium",
     "email_premium_greeting": "Bonjour {username},",
     "email_premium_description": "L'analyse des billets par email est une fonctionnalité premium disponible pour les membres Trainlogger et supérieur.",
-    "email_premium_cta": "Devenir membre",
-    "visibility": "Visibilité",
-    "visibility_select": "Sélectionner la visibilité",
-    "visibility_public": "Public",
-    "visibility_friends": "Amis",
-    "visibility_private": "Privé",
-    "bulk_change_visibility": "Définir la visibilité"
+    "email_premium_cta": "Devenir membre"
 }

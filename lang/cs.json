@@ -643,6 +643,15 @@
     "fr_email_reason_label": "Důvod:",
     "fr_email_english_note": "Poznámka: Technické detaily a důvody jsou uvedeny v angličtině, aby byla zajištěna srozumitelnost pro naši mezinárodní uživatelskou základnu.",
     "fr_email_signature": "S pozdravem<br>Tým Trainlog",
+    "visibility": "Viditelnost",
+    "visibility_select": "Vyberte viditelnost",
+    "visibility_public": "Veřejné",
+    "visibility_friends": "Přátelé",
+    "visibility_private": "Soukromé",
+    "bulk_change_visibility": "Nastavit viditelnost",
+    "share_trips_some_trips_not_public": "Některé z vybraných cest nejsou veřejné. Chcete je nyní zveřejnit?",
+    "share_trips_leave_as_is": "Nechat, jak to je",
+    "share_trips_make_public": "Zveřejnit",
     "wrapped_title": "REKAPITULACE",
     "wrapped_your_year": "Tvůj Rok",
     "wrapped_in_travel": "v Cestování",
@@ -730,11 +739,5 @@
     "email_premium_title": "Prémiová funkce",
     "email_premium_greeting": "Ahoj {username},",
     "email_premium_description": "Zpracování emailových jízdenek je prémiová funkce dostupná pro členy Trainlogger a výše.",
-    "email_premium_cta": "Staňte se členem",
-    "visibility": "Viditelnost",
-    "visibility_select": "Vyberte viditelnost",
-    "visibility_public": "Veřejné",
-    "visibility_friends": "Přátelé",
-    "visibility_private": "Soukromé",
-    "bulk_change_visibility": "Nastavit viditelnost"
+    "email_premium_cta": "Staňte se členem"
 }
