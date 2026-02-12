@@ -14,8 +14,21 @@
         <p class="text-muted">Data is available starting from 30 days in the past to one day in the future</p>
         <form id="fr24Form">
           <div class="mb-3">
-            <label for="fr24FlightNumber" class="form-label">Flight Number</label>
+            <label class="form-label d-block">{{searchBy}}</label>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="fr24SearchToggle">
+              <label class="form-check-label" for="fr24SearchToggle" id="fr24SearchToggleLabel">{{reg}}</label>
+            </div>
+          </div>
+
+          <div class="mb-3" id="flightNumberGroup">
+            <label for="fr24FlightNumber" class="form-label">{{flightNumber}}</label>
             <input type="text" class="form-control" id="fr24FlightNumber" placeholder="e.g. EK184">
+          </div>
+
+          <div class="mb-3 d-none" id="regNumberGroup">
+            <label for="fr24RegNumber" class="form-label">{{reg}}</label>
+            <input type="text" class="form-control" id="fr24RegNumber" placeholder="{{registrationPlaceholder}}">
           </div>
           <div class="mb-3">
             <label for="fr24Date" class="form-label">Flight Date</label>
@@ -519,11 +532,18 @@ let allFlightLegs = [];
 
 // Update the FR24 submit button click handler
 $("#fr24SubmitBtn").click(async function () {
+  const isReg = document.getElementById('fr24SearchToggle').checked;
+  const searchType = isReg ? 'reg' : 'flight';
   const flightNumber = $("#fr24FlightNumber").val().trim();
+  const regNumber = $("#fr24RegNumber").val().trim();
   const flightDate = $("#fr24Date").val();
 
-  if (!flightNumber || !flightDate) {
+  if (searchType === 'flight' && (!flightNumber || !flightDate)) {
     $("#fr24Error").text("Please enter both flight number and date.").removeClass("d-none");
+    return;
+  }
+  if (searchType === 'reg' && (!regNumber || !flightDate)) {
+    $("#fr24Error").text("Please enter both registration and date.").removeClass("d-none");
     return;
   }
 
@@ -531,10 +551,15 @@ $("#fr24SubmitBtn").click(async function () {
   updateProgressBar(10);
 
   try {
-    const res = await $.get('{{url_for("flight_summary", username=username)}}', {
-      flight_number: flightNumber,
-      date: flightDate
-    });
+    const url = searchType === 'flight'
+      ? '{{url_for("flight_summary", username=username)}}'
+      : '{{url_for("flight_summary_reg", username=username)}}';
+
+    const query = searchType === 'flight'
+      ? { flight_number: flightNumber, date: flightDate }
+      : { registration: regNumber, date: flightDate };
+
+    const res = await $.get(url, query);
 
     if (!res.data || res.data.length === 0) {
       $("#fr24Error").text("No flight data found for this number and date.").removeClass("d-none");
@@ -558,6 +583,17 @@ $("#fr24SubmitBtn").click(async function () {
     console.error(err);
     $("#fr24Error").text("Error fetching flight data.").removeClass("d-none");
     updateProgressBar(0);
+  }
+});
+
+$('#fr24SearchToggle').on('change', function () {
+  const isReg = $(this).is(':checked');
+  if (isReg) {
+    $('#flightNumberGroup').addClass('d-none');
+    $('#regNumberGroup').removeClass('d-none');
+  } else {
+    $('#regNumberGroup').addClass('d-none');
+    $('#flightNumberGroup').removeClass('d-none');
   }
 });
 
