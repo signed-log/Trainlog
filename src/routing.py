@@ -10,8 +10,10 @@ from src.graphhopper import convert_graphhopper_to_osrm     # example
 
 def forward_routing_core(routingType, path, flask_request):
     # Normalize routing type
-    if routingType in ("train", "tram", "metro"):
+    if routingType in ("train", "tram", "metro", "funicular", "rail"):
         routingType = "train"
+    elif routingType == "e_scooter":
+        routingType = "cycle"
 
     radiuses = None
     use_new_router = False  # defined for all paths

@@ -9,10 +9,15 @@ const MapConfig = {
         { id: 'bus', icon: 'fa-bus', color: '#9f4bbb' },
         { id: 'car', icon: 'fa-car-side', color: '#a68fcd' },
         { id: 'cycle', icon: 'fa-bicycle', color: '#6e211a' },
+        { id: 'e_scooter', icon: 'fa-motorcycle', color: '#00d084' },
+        { id: 'funicular', icon: 'fa-mountain', color: '#6495ed' },
+        { id: 'rail', icon: 'fa-dumbbell', color: '#7ec8ff' },
+        { id: 'ski', icon: 'fa-person-skiing', color: '#b8e6f0' },
         { id: 'walk', icon: 'fa-person-hiking', color: '#e88c00' },
         { id: 'air', icon: 'fa-plane', color: '#40b91f' },
         { id: 'ferry', icon: 'fa-ship', color: '#1e1e7c' },
-        { id: 'aerialway', icon: 'fa-cable-car', color: '#afcf3b' }
+        { id: 'aerialway', icon: 'fa-cable-car', color: '#afcf3b' },
+        { id: 'other', icon: 'fa-circle-question', color: '#000000' }
     ],
     jawgAllowedLangs: ["de", "en", "es", "fr", "it", "ja", "ko", "nl", "ru", "zh"],
     vectorStylePaths: {

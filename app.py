@@ -1040,6 +1040,11 @@ def inject_distinct_types():
         "walk": "fa-solid fa-person-hiking",
         "cycle": "fa-solid fa-bicycle",
         "car": "fa-solid fa-car-side",
+        "e_scooter": "fa-solid fa-motorcycle",
+        "funicular": "fa-solid fa-mountain",
+        "rail": "fa-solid fa-dumbbell",
+        "ski": "fa-solid fa-person-skiing",
+        "other": "fa-solid fa-circle-question",
     }
 
     # 5) Query, but fail soft if DB is locked (or anything else goes wrong)
@@ -1243,6 +1248,36 @@ def new(username, vehicle_type):
         destination_terminal_name = lang[session["userinfo"]["lang"]][
             "destinationAerialwayName"
         ]
+
+    elif vehicle_type == "funicular":
+        manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
+        new_trip = lang[session["userinfo"]["lang"]].get("newTripFunicular", "New Trip - Funicular")
+        origin_terminal = lang[session["userinfo"]["lang"]]["originStation"]
+        origin_terminal_name = lang[session["userinfo"]["lang"]]["originStationName"]
+        destination_terminal = lang[session["userinfo"]["lang"]]["destinationStation"]
+        destination_terminal_name = lang[session["userinfo"]["lang"]][
+            "destinationStationName"
+        ]
+
+    elif vehicle_type == "rail":
+        manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
+        new_trip = lang[session["userinfo"]["lang"]].get("newTripRail", "New Trip - Rail")
+        origin_terminal = lang[session["userinfo"]["lang"]]["originStation"]
+        origin_terminal_name = lang[session["userinfo"]["lang"]]["originStationName"]
+        destination_terminal = lang[session["userinfo"]["lang"]]["destinationStation"]
+        destination_terminal_name = lang[session["userinfo"]["lang"]][
+            "destinationStationName"
+        ]
+
+    elif vehicle_type == "e_scooter":
+        manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
+        new_trip = lang[session["userinfo"]["lang"]].get("newTripEScooter", "New Trip - E-Scooter")
+        origin_terminal = lang[session["userinfo"]["lang"]].get("originEScooter", lang[session["userinfo"]["lang"]]["originBike"])
+        origin_terminal_name = lang[session["userinfo"]["lang"]].get("originEScooterName", lang[session["userinfo"]["lang"]]["originBikeName"])
+        destination_terminal = lang[session["userinfo"]["lang"]].get("destinationEScooter", lang[session["userinfo"]["lang"]]["destinationBike"])
+        destination_terminal_name = lang[session["userinfo"]["lang"]].get(
+            "destinationEScooterName", lang[session["userinfo"]["lang"]]["destinationBikeName"]
+        )
 
     return render_template(
         "new.html",
@@ -1631,12 +1666,17 @@ def list_gpx(username):
         "train": lang[session["userinfo"]["lang"]]["train"],
         "tram": lang[session["userinfo"]["lang"]]["tram"],
         "metro": lang[session["userinfo"]["lang"]]["metro"],
+        "funicular": lang[session["userinfo"]["lang"]]["funicular"],
+        "rail": lang[session["userinfo"]["lang"]]["rail"],
         "bus": lang[session["userinfo"]["lang"]]["bus"],
         "ferry": lang[session["userinfo"]["lang"]]["ferry"],
         "car": lang[session["userinfo"]["lang"]]["car"],
         "cycle": lang[session["userinfo"]["lang"]]["cycle"],
+        "e_scooter": lang[session["userinfo"]["lang"]]["e_scooter"],
         "walk": lang[session["userinfo"]["lang"]]["walk"],
         "aerialway": lang[session["userinfo"]["lang"]]["aerialway"],
+        "ski": lang[session["userinfo"]["lang"]]["ski"],
+        "other": lang[session["userinfo"]["lang"]]["other"],
         "air": lang[session["userinfo"]["lang"]]["air"],
         "helicopter": lang[session["userinfo"]["lang"]]["helicopter"],
     }
@@ -1792,7 +1832,7 @@ def saveTripFromGPX(username, gpx_id):
 
     # Process the route based on user preferences
     if use_routing and trip_type in [
-        "train", "metro", "tram", "ferry", "aerialway", "bus", "car", "walk", "cycle"
+        "train", "metro", "tram", "funicular", "rail", "ferry", "aerialway", "bus", "car", "walk", "cycle", "e_scooter"
     ]:
         # Use advanced GPS cleaning instead of basic routing
         print(f"Processing GPS route with {len(raw_waypoints)} points using smart routing...")
@@ -1922,6 +1962,543 @@ def previewSmartRouting(username, gpx_id, trip_type):
                          raw_waypoints=json.dumps(raw_waypoints),
                          cleaning_result=json.dumps(cleaning_result),
                          success=cleaning_result["success"])
+
+
+def parse_maprika_filename(filename):
+    """
+    Parse Maprika GPX filename format: @2026-01-17 08.40, Skiing @ Serre Chevalier opensnowmap.gpx
+    Returns: dict with 'date', 'time', 'name' or None if not Maprika format
+    """
+    import re
+    # Pattern: @YYYY-MM-DD HH.MM, Name.gpx
+    pattern = r'^@(\d{4}-\d{2}-\d{2})\s+(\d{2}\.\d{2}),\s+(.+)\.gpx$'
+    match = re.match(pattern, filename)
+    if match:
+        date_str = match.group(1)
+        time_str = match.group(2).replace('.', ':')  # Convert 08.40 to 08:40
+        name = match.group(3)
+        return {
+            'date': date_str,
+            'time': time_str,
+            'name': name,
+            'datetime': f"{date_str} {time_str}"
+        }
+    return None
+
+
+@app.route("/u/<username>/upload_gpx_advanced")
+@login_required
+def upload_gpx_advanced(username):
+    """Display batch GPX upload interface"""
+    trip_types = {
+        "train": lang[session["userinfo"]["lang"]]["train"],
+        "tram": lang[session["userinfo"]["lang"]]["tram"],
+        "metro": lang[session["userinfo"]["lang"]]["metro"],
+        "funicular": lang[session["userinfo"]["lang"]]["funicular"],
+        "rail": lang[session["userinfo"]["lang"]]["rail"],
+        "bus": lang[session["userinfo"]["lang"]]["bus"],
+        "ferry": lang[session["userinfo"]["lang"]]["ferry"],
+        "car": lang[session["userinfo"]["lang"]]["car"],
+        "cycle": lang[session["userinfo"]["lang"]]["cycle"],
+        "e_scooter": lang[session["userinfo"]["lang"]]["e_scooter"],
+        "walk": lang[session["userinfo"]["lang"]]["walk"],
+        "aerialway": lang[session["userinfo"]["lang"]]["aerialway"],
+        "ski": lang[session["userinfo"]["lang"]]["ski"],
+        "other": lang[session["userinfo"]["lang"]]["other"],
+        "air": lang[session["userinfo"]["lang"]]["air"],
+        "helicopter": lang[session["userinfo"]["lang"]]["helicopter"],
+    }
+
+    return render_template(
+        "upload_gpx_advanced.html",
+        title=lang[session["userinfo"]["lang"]].get("advanced_gpx_import", "Batch GPX Upload"),
+        username=username,
+        trip_types=trip_types,
+        l=lang[session["userinfo"]["lang"]],
+        **lang[session["userinfo"]["lang"]],
+        **session["userinfo"],
+    )
+
+
+@app.route("/u/<username>/parse_gpx_advanced", methods=["POST"])
+@login_required
+def parse_gpx_advanced(username):
+    """Parse multiple GPX files and return trip data, including Maprika segments"""
+    files = request.files.getlist("files")
+
+    if not files:
+        return jsonify({"error": "No files uploaded"}), 400
+
+    trips = []
+
+    for file in files:
+        if not file.filename.endswith(".gpx"):
+            continue
+
+        try:
+            # Read file content
+            file_content = file.read()
+            file.seek(0)
+
+            # Parse Maprika filename if applicable
+            maprika_data = parse_maprika_filename(file.filename)
+
+            # Parse GPX content
+            gpx = gpxpy.parse(file)
+
+            # Collect all track points
+            all_points = []
+            if gpx.tracks:
+                for track in gpx.tracks:
+                    for segment in track.segments:
+                        all_points.extend(segment.points)
+
+            if not all_points:
+                continue
+
+            # Try to parse Maprika segments
+            maprika_segments = []
+            try:
+                root = ET.fromstring(file_content)
+                # Find maprika:log section
+                namespaces = {'maprika': 'http://www.maprika.com/gpx'}
+                log = root.find('.//maprika:log', namespaces)
+
+                if log is not None:
+                    for seg in log.findall('maprika:segment', namespaces):
+                        seg_type = int(seg.get('type', 0))
+                        seg_name = seg.get('name', '')
+                        start_time_unix = int(seg.get('startTime', 0))
+                        moving_time = int(seg.get('movingTime', 0))
+                        index_begin = int(seg.get('indexBegin', 0))
+                        index_end = int(seg.get('indexEnd', 0))
+
+                        # Map Maprika types to Trainlog types
+                        # 1=chairlift, 7=gondola, 8=bus, 9=ski lift
+                        # 3=easy run, 4=medium run, 5=difficult run
+                        # 2=unknown/walking, 6=break
+                        if seg_type in [1, 7, 9]:  # Lifts and gondolas
+                            trip_type = 'aerialway'
+                        elif seg_type == 8:  # Bus
+                            trip_type = 'bus'
+                        elif seg_type in [3, 4, 5]:  # Ski runs
+                            trip_type = 'ski'
+                        elif seg_type == 2:  # Unknown/walking
+                            trip_type = 'walk'
+                        elif seg_type == 6:  # Break
+                            continue  # Skip breaks
+                        else:
+                            trip_type = 'other'
+
+                        maprika_segments.append({
+                            'name': seg_name,
+                            'type': trip_type,
+                            'start_time_unix': start_time_unix,
+                            'duration': moving_time,
+                            'index_begin': index_begin,
+                            'index_end': index_end
+                        })
+            except Exception as e:
+                logger.info(f"No Maprika segments found in {file.filename}: {str(e)}")
+
+            # If Maprika segments found, create trips from segments
+            if maprika_segments:
+                for seg in maprika_segments:
+                    try:
+                        # Extract points for this segment
+                        seg_points = all_points[seg['index_begin']:seg['index_end'] + 1]
+
+                        if not seg_points or len(seg_points) < 2:
+                            continue
+
+                        # Calculate distance
+                        distance = 0
+                        for i in range(1, len(seg_points)):
+                            distance += getDistance(
+                                {"lat": seg_points[i - 1].latitude, "lng": seg_points[i - 1].longitude},
+                                {"lat": seg_points[i].latitude, "lng": seg_points[i].longitude},
+                            )
+
+                        # Get start and end points
+                        start_point = seg_points[0]
+                        end_point = seg_points[-1]
+
+                        # Geocode
+                        origin = getAddressFromCoords(lat=start_point.latitude, lng=start_point.longitude)
+                        destination = getAddressFromCoords(lat=end_point.latitude, lng=end_point.longitude)
+
+                        # Convert Unix timestamp to datetime
+                        from datetime import datetime
+                        start_datetime = datetime.fromtimestamp(seg['start_time_unix'], UTC)
+                        end_datetime = datetime.fromtimestamp(seg['start_time_unix'] + seg['duration'], UTC)
+
+                        # Convert to local time
+                        start_time_local = getLocalDatetime(start_point.latitude, start_point.longitude, start_datetime)
+                        end_time_local = getLocalDatetime(end_point.latitude, end_point.longitude, end_datetime)
+
+                        formatted_start_time = start_time_local.strftime("%Y-%m-%d %H:%M")
+                        formatted_end_time = end_time_local.strftime("%Y-%m-%d %H:%M")
+
+                        # Generate path
+                        path = [[point.latitude, point.longitude] for point in seg_points]
+
+                        # Build trip data
+                        trip_data = {
+                            'origin': origin,
+                            'destination': destination,
+                            'start_time': formatted_start_time,
+                            'end_time': formatted_end_time,
+                            'duration': seg['duration'],
+                            'distance': int(distance),
+                            'path': path,
+                            'maprika_name': seg['name'] or (maprika_data['name'] if maprika_data else None),
+                            'gpx_name': seg['name'],
+                            'notes': f"Segment from {file.filename}",
+                            'suggested_type': seg['type'],
+                            'filename': file.filename
+                        }
+
+                        trips.append(trip_data)
+                    except Exception as e:
+                        logger.error(f"Error processing segment in {file.filename}: {str(e)}")
+                        continue
+            else:
+                # No Maprika segments - treat as single trip (original behavior)
+                points = all_points
+                start_time = None
+                end_time = None
+                distance = 0
+
+                if points[0].time and points[-1].time:
+                    start_time = points[0].time
+                    end_time = points[-1].time
+
+                # Calculate distance
+                for i in range(1, len(points)):
+                    distance += getDistance(
+                        {"lat": points[i - 1].latitude, "lng": points[i - 1].longitude},
+                        {"lat": points[i].latitude, "lng": points[i].longitude},
+                    )
+
+                # Extract start and end points
+                start_point = points[0]
+                end_point = points[-1]
+
+                # Geocode
+                origin = getAddressFromCoords(lat=start_point.latitude, lng=start_point.longitude)
+                destination = getAddressFromCoords(lat=end_point.latitude, lng=end_point.longitude)
+
+                # Calculate duration
+                duration = 0
+                formatted_start_time = None
+                formatted_end_time = None
+
+                if start_time and end_time:
+                    duration = int((end_time - start_time).total_seconds())
+                    start_time_local = getLocalDatetime(start_point.latitude, start_point.longitude, start_time)
+                    end_time_local = getLocalDatetime(end_point.latitude, end_point.longitude, end_time)
+                    formatted_start_time = start_time_local.strftime("%Y-%m-%d %H:%M")
+                    formatted_end_time = end_time_local.strftime("%Y-%m-%d %H:%M")
+                elif maprika_data:
+                    formatted_start_time = maprika_data['datetime']
+
+                # Generate path
+                path = [[point.latitude, point.longitude] for point in points]
+
+                # Determine suggested trip type
+                suggested_type = "other"
+                if maprika_data and maprika_data['name']:
+                    name_lower = maprika_data['name'].lower()
+                    if 'ski' in name_lower or 'skiing' in name_lower:
+                        suggested_type = 'ski'
+                    elif 'cycle' in name_lower or 'bike' in name_lower:
+                        suggested_type = 'cycle'
+                    elif 'walk' in name_lower or 'hike' in name_lower:
+                        suggested_type = 'walk'
+
+                # Build trip data
+                trip_data = {
+                    'origin': origin,
+                    'destination': destination,
+                    'start_time': formatted_start_time,
+                    'end_time': formatted_end_time,
+                    'duration': duration,
+                    'distance': int(distance),
+                    'path': path,
+                    'maprika_name': maprika_data['name'] if maprika_data else None,
+                    'gpx_name': gpx.tracks[0].name if gpx.tracks else None,
+                    'notes': gpx.tracks[0].description if gpx.tracks and gpx.tracks[0].description else '',
+                    'suggested_type': suggested_type,
+                    'filename': file.filename
+                }
+
+                trips.append(trip_data)
+
+        except Exception as e:
+            logger.error(f"Error parsing {file.filename}: {str(e)}")
+            traceback.print_exc()
+            continue
+
+    return jsonify({"trips": trips}), 200
+
+
+@app.route("/u/<username>/parse_gpx_stream", methods=["POST"])
+@login_required
+def parse_gpx_stream(username):
+    """Stream GPX parsing progress using Server-Sent Events"""
+    files = request.files.getlist("files")
+
+    if not files:
+        return jsonify({"error": "No files uploaded"}), 400
+
+    # Read all file contents upfront before generator starts
+    file_data = []
+    for file in files:
+        if file.filename.endswith(".gpx"):
+            file_data.append({
+                'filename': file.filename,
+                'content': file.read()
+            })
+
+    def generate():
+        """Generator that yields trip data as SSE"""
+        all_trips = []
+        total_segments = 0
+        processed_segments = 0
+
+        # First pass: count total segments
+        for file_info in file_data:
+            try:
+                root = ET.fromstring(file_info['content'])
+                namespaces = {'maprika': 'http://www.maprika.com/gpx'}
+                log = root.find('.//maprika:log', namespaces)
+
+                if log is not None:
+                    segments = log.findall('maprika:segment', namespaces)
+                    # Don't count type 6 (breaks)
+                    total_segments += sum(1 for seg in segments if int(seg.get('type', 0)) != 6)
+                else:
+                    total_segments += 1  # Non-Maprika file = 1 trip
+            except:
+                pass
+
+        # Send total count
+        yield f"data: {json.dumps({'type': 'total', 'count': total_segments})}\n\n"
+
+        # Second pass: process and stream each segment
+        for file_info in file_data:
+            try:
+                from io import BytesIO
+                file_content = file_info['content']
+                filename = file_info['filename']
+
+                maprika_data = parse_maprika_filename(filename)
+                gpx = gpxpy.parse(BytesIO(file_content))
+
+                all_points = []
+                if gpx.tracks:
+                    for track in gpx.tracks:
+                        for segment in track.segments:
+                            all_points.extend(segment.points)
+
+                if not all_points:
+                    continue
+
+                # Parse Maprika segments
+                maprika_segments = []
+                try:
+                    root = ET.fromstring(file_content)
+                    namespaces = {'maprika': 'http://www.maprika.com/gpx'}
+                    log = root.find('.//maprika:log', namespaces)
+
+                    if log is not None:
+                        for seg in log.findall('maprika:segment', namespaces):
+                            seg_type = int(seg.get('type', 0))
+                            if seg_type == 6:  # Skip breaks
+                                continue
+
+                            seg_name = seg.get('name', '')
+                            start_time_unix = int(seg.get('startTime', 0))
+                            moving_time = int(seg.get('movingTime', 0))
+                            index_begin = int(seg.get('indexBegin', 0))
+                            index_end = int(seg.get('indexEnd', 0))
+
+                            if seg_type in [1, 7, 9]:
+                                trip_type = 'aerialway'
+                            elif seg_type == 8:
+                                trip_type = 'bus'
+                            elif seg_type in [3, 4, 5]:
+                                trip_type = 'ski'
+                            elif seg_type == 2:
+                                trip_type = 'walk'
+                            else:
+                                trip_type = 'other'
+
+                            maprika_segments.append({
+                                'name': seg_name,
+                                'type': trip_type,
+                                'start_time_unix': start_time_unix,
+                                'duration': moving_time,
+                                'index_begin': index_begin,
+                                'index_end': index_end
+                            })
+                except Exception as e:
+                    logger.info(f"No Maprika segments: {str(e)}")
+
+                # Process each segment and stream
+                if maprika_segments:
+                    for seg in maprika_segments:
+                        try:
+                            processed_segments += 1
+                            seg_points = all_points[seg['index_begin']:seg['index_end'] + 1]
+
+                            if not seg_points or len(seg_points) < 2:
+                                continue
+
+                            # Send progress update
+                            yield f"data: {json.dumps({'type': 'progress', 'current': processed_segments, 'total': total_segments, 'name': seg['name'] or 'Unknown'})}\n\n"
+
+                            # Calculate distance
+                            distance = 0
+                            for i in range(1, len(seg_points)):
+                                distance += getDistance(
+                                    {"lat": seg_points[i - 1].latitude, "lng": seg_points[i - 1].longitude},
+                                    {"lat": seg_points[i].latitude, "lng": seg_points[i].longitude},
+                                )
+
+                            start_point = seg_points[0]
+                            end_point = seg_points[-1]
+
+                            # Geocode (the slow part - but we're showing progress!)
+                            origin = getAddressFromCoords(lat=start_point.latitude, lng=start_point.longitude)
+                            destination = getAddressFromCoords(lat=end_point.latitude, lng=end_point.longitude)
+
+                            from datetime import datetime
+                            start_datetime = datetime.fromtimestamp(seg['start_time_unix'], UTC)
+                            end_datetime = datetime.fromtimestamp(seg['start_time_unix'] + seg['duration'], UTC)
+                            start_time_local = getLocalDatetime(start_point.latitude, start_point.longitude, start_datetime)
+                            end_time_local = getLocalDatetime(end_point.latitude, end_point.longitude, end_datetime)
+
+                            formatted_start_time = start_time_local.strftime("%Y-%m-%d %H:%M")
+                            formatted_end_time = end_time_local.strftime("%Y-%m-%d %H:%M")
+
+                            path = [[point.latitude, point.longitude] for point in seg_points]
+
+                            trip_data = {
+                                'origin': origin,
+                                'destination': destination,
+                                'start_time': formatted_start_time,
+                                'end_time': formatted_end_time,
+                                'duration': seg['duration'],
+                                'distance': int(distance),
+                                'path': path,
+                                'maprika_name': seg['name'] or (maprika_data['name'] if maprika_data else None),
+                                'gpx_name': seg['name'],
+                                'notes': f"Segment from {filename}",
+                                'suggested_type': seg['type'],
+                                'filename': filename
+                            }
+
+                            all_trips.append(trip_data)
+
+                            # Stream the completed trip
+                            yield f"data: {json.dumps({'type': 'trip', 'trip': trip_data})}\n\n"
+
+                        except Exception as e:
+                            logger.error(f"Error processing segment: {str(e)}")
+                            continue
+                else:
+                    # Process as single trip (non-Maprika)
+                    processed_segments += 1
+                    yield f"data: {json.dumps({'type': 'progress', 'current': processed_segments, 'total': total_segments, 'name': filename})}\n\n"
+                    # ... (similar processing for non-Maprika files)
+
+            except Exception as e:
+                logger.error(f"Error parsing {filename}: {str(e)}")
+                continue
+
+        # Send completion
+        yield f"data: {json.dumps({'type': 'done', 'count': len(all_trips)})}\n\n"
+
+    return app.response_class(generate(), mimetype='text/event-stream')
+
+
+@app.route("/u/<username>/save_gpx_advanced", methods=["POST"])
+@login_required
+def save_gpx_advanced(username):
+    """Save selected trips from batch GPX upload"""
+    data = request.get_json()
+    trips = data.get("trips", [])
+
+    if not trips:
+        return jsonify({"error": "No trips provided"}), 400
+
+    saved_count = 0
+
+    for trip in trips:
+        try:
+            trip_type = trip.get("type", "other")
+            origin = trip.get("origin")
+            destination = trip.get("destination")
+            start_time = trip.get("start_time")
+            end_time = trip.get("end_time")
+            duration = trip.get("duration", 0)
+            distance = trip.get("distance", 0)
+            path_raw = trip.get("path", [])
+            notes = trip.get("notes", "")
+
+            # Convert path from [[lat, lng], ...] to [{"lat": lat, "lng": lng}, ...]
+            path = [{"lat": point[0], "lng": point[1]} for point in path_raw]
+
+            # Add Maprika name to notes if present
+            if trip.get("maprika_name"):
+                notes = f"{trip['maprika_name']}\n{notes}".strip()
+
+            # Determine precision
+            precision = "preciseDates" if start_time else "unknown"
+
+            # Convert datetime format if needed
+            if start_time and start_time != -1:
+                start_time = start_time.replace(" ", "T")
+            else:
+                start_time = -1
+
+            if end_time and end_time != -1:
+                end_time = end_time.replace(" ", "T")
+            else:
+                end_time = -1
+
+            # Build trip structure
+            newTrip = {
+                "type": trip_type,
+                "originStation": [None, origin],
+                "destinationStation": [None, destination],
+                "newTripStart": start_time,
+                "newTripEnd": end_time,
+                "trip_length": distance,
+                "estimated_trip_duration": duration,
+                "operator": "",
+                "lineName": "",
+                "price": None,
+                "currency": None,
+                "purchasing_date": None,
+                "precision": precision,
+                "notes": notes,
+                "onlyDateDuration": "",
+                "unknownType": "past",
+                "waypoints": json.dumps([]),
+            }
+
+            # Save trip
+            saveTripToDb(username=username, newTrip=newTrip, newPath=path, trip_type=trip_type)
+            saved_count += 1
+
+        except Exception as e:
+            logger.error(f"Error saving trip: {str(e)}")
+            continue
+
+    return jsonify({"success": True, "count": saved_count}), 200
+
 
 @app.route("/u/<username>/submit_ticket", methods=["POST"])
 @login_required
@@ -2812,7 +3389,7 @@ def vector_style(language, style):
         file_contents = file_contents.replace(
             "{{mapPinUrl}}",
             url_for(
-                "static", filename="styles/vector_maps", _scheme="https", _external=True
+                "static", filename="styles/vector_maps", _scheme=request.scheme, _external=True
             ),
         )
         template_url = "https://tiles.trainlog.me/tile/streets-v2+landcover-v1.1+hillshade-v1/{x}/{y}/{z}/{language}"

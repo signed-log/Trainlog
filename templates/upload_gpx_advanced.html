@@ -1,0 +1,396 @@
+{% extends "bootstrap/layout.html" %}
+{% block content %}
+{% include "bootstrap/navigation.html" %}
+<div class="container mt-4">
+  <div class="row">
+    <div class="col-md-10 offset-md-1">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">{{ l.get("advanced_gpx_import", "Batch GPX Upload") }}</h2>
+      </div>
+
+      <div id="uploadSection">
+        <form id="uploadForm" enctype="multipart/form-data">
+          <div class="mb-4">
+            <label class="form-label fw-semibold">{{ l.get("select_gpx_files", "Select GPX Files") }}</label>
+            <div id="dropZone" class="border border-2 border-dashed rounded-3 p-4 text-center bg-light" style="cursor:pointer; transition: all 0.2s;">
+              <div id="dropText">
+                <i class="bi bi-cloud-upload fs-1 text-secondary mb-2"></i>
+                <p class="mb-1">{{ l.get("drop_gpx_files", "Drop GPX files here or click to browse") }}</p>
+                <small class="text-muted">{{ l.get("gpx_only", "GPX files only (supports Maprika format)") }}</small>
+              </div>
+              <div id="fileList" class="mt-3"></div>
+            </div>
+            <input type="file" id="fileInput" name="files" multiple accept=".gpx" class="d-none">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-100" id="uploadBtn">
+            <span id="uploadBtnText"><i class="bi bi-upload me-2"></i>{{ l.get("analyze_files", "Analyze Files") }}</span>
+            <span id="uploadBtnSpinner" class="spinner-border spinner-border-sm d-none"></span>
+          </button>
+        </form>
+      </div>
+
+      <div id="progressSection" class="d-none">
+        <div class="card">
+          <div class="card-body text-center">
+            <div class="spinner-border text-primary mb-3" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <h5 id="progressText">Processing...</h5>
+            <div class="progress mt-3" style="height: 25px;">
+              <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%">0%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="previewSection" class="d-none">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h4 class="mb-0">{{ l.get("trips_found", "Trips found") }}: <span id="tripCount">0</span></h4>
+          <button class="btn btn-sm btn-outline-secondary" id="backBtn">
+            <i class="bi bi-arrow-left me-1"></i>{{ l.get("back", "Back") }}
+          </button>
+        </div>
+        <div id="tripsList" class="mb-3"></div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-success btn-lg flex-grow-1" id="saveBtn">
+            <span id="saveBtnText"><i class="bi bi-check-circle me-2"></i>{{ l.get("save_selected", "Save selected") }}</span>
+            <span id="saveBtnSpinner" class="spinner-border spinner-border-sm d-none"></span>
+          </button>
+          <button class="btn btn-outline-danger btn-lg" id="cancelBtn">{{ l.get("cancel", "Cancel") }}</button>
+        </div>
+      </div>
+
+      <div id="resultSection" class="mt-4 d-none">
+        <div class="alert" id="resultAlert"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.trip-card {
+  border: 2px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  transition: all 0.2s;
+  background: white;
+}
+.trip-card.selected {
+  border-color: #198754;
+  background: #f8fff8;
+  box-shadow: 0 2px 8px rgba(25, 135, 84, 0.15);
+}
+.trip-card:hover {
+  border-color: #adb5bd;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.trip-header { font-weight: 600; font-size: 1.1em; }
+.trip-details { color: #6c757d; font-size: 0.9em; margin-top: 0.5rem; }
+#dropZone.dragover {
+  border-color: #0d6efd !important;
+  background: #e7f1ff !important;
+  transform: scale(1.01);
+}
+.file-item {
+  display: inline-flex;
+  align-items: center;
+  background: #e9ecef;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  margin: 0.25rem;
+  font-size: 0.875em;
+}
+.file-item .remove {
+  cursor: pointer;
+  margin-left: 0.5rem;
+  color: #dc3545;
+  font-weight: bold;
+}
+.file-item .remove:hover {
+  color: #bb2d3b;
+}
+.trip-type-select {
+  min-width: 150px;
+}
+</style>
+
+<script>
+const URLS = {
+  parse: "{{ url_for('parse_gpx_advanced', username=username) }}",
+  parseStream: "{{ url_for('parse_gpx_stream', username=username) }}",
+  save: "{{ url_for('save_gpx_advanced', username=username) }}",
+  trip: "{{ url_for('public_trip', tripIds='__ID__') }}"
+};
+
+let tripsData = [];
+let selectedFiles = [];
+
+// Drop zone
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('dragover');
+  addFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', () => addFiles(fileInput.files));
+
+function addFiles(files) {
+  for (const f of files) {
+    if (f.name.endsWith('.gpx') && !selectedFiles.some(s => s.name === f.name && s.size === f.size)) {
+      selectedFiles.push(f);
+    }
+  }
+  renderFileList();
+}
+
+function renderFileList() {
+  const list = document.getElementById('fileList');
+  if (!selectedFiles.length) {
+    list.innerHTML = '';
+    return;
+  }
+  list.innerHTML = selectedFiles.map((f, i) =>
+    `<span class="file-item"><i class="bi bi-file-earmark me-1"></i>${f.name} <span class="remove" data-idx="${i}">&times;</span></span>`
+  ).join('');
+}
+
+$('#fileList').on('click', '.remove', function() {
+  selectedFiles.splice($(this).data('idx'), 1);
+  renderFileList();
+});
+
+$('#uploadForm').on('submit', function(e) {
+  e.preventDefault();
+
+  if (!selectedFiles.length) {
+    showResult('warning', '{{ l.get("select_files", "Please select at least one file") }}');
+    return;
+  }
+
+  // Show progress section
+  $('#uploadSection').addClass('d-none');
+  $('#progressSection').removeClass('d-none');
+  $('#progressText').text('{{ l.get("processing_starting", "Starting...") }}');
+  $('#progressBar').css('width', '0%').text('0%');
+
+  const allTrips = [];
+  let totalSegments = 0;
+
+  // Create FormData with all files
+  const formData = new FormData();
+  selectedFiles.forEach(f => formData.append('files', f));
+
+  // Use XHR to get streaming response
+  $.ajax({
+    url: URLS.parseStream,
+    type: 'POST',
+    data: formData,
+    processData: false,
+    contentType: false,
+    xhr: function() {
+      const xhr = new XMLHttpRequest();
+      let buffer = '';
+
+      xhr.onprogress = function() {
+        const text = xhr.responseText;
+        const newData = text.substring(buffer.length);
+        buffer = text;
+
+        // Parse SSE messages
+        const lines = newData.split('\n');
+        for (let line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.substring(6));
+
+              if (data.type === 'total') {
+                totalSegments = data.count;
+                $('#progressText').text('{{ l.get("processing_found_trips", "Found {count} trips to process...") }}'.replace('{count}', totalSegments));
+              } else if (data.type === 'progress') {
+                const progress = Math.round((data.current / totalSegments) * 100);
+                $('#progressText').text('{{ l.get("processing_trip_progress", "Processing trip {current}/{total}: {name}") }}'.replace('{current}', data.current).replace('{total}', totalSegments).replace('{name}', data.name));
+                $('#progressBar').css('width', progress + '%').text(progress + '%');
+              } else if (data.type === 'trip') {
+                allTrips.push(data.trip);
+              } else if (data.type === 'done') {
+                // Complete
+                setTimeout(() => {
+                  $('#progressSection').addClass('d-none');
+                  if (allTrips.length > 0) {
+                    tripsData = allTrips;
+                    renderTrips(tripsData);
+                    $('#previewSection').removeClass('d-none');
+                    $('#tripCount').text(tripsData.length);
+                  } else {
+                    $('#uploadSection').removeClass('d-none');
+                    showResult('danger', '{{ l.get("no_trips_found", "No trips found") }}');
+                  }
+                }, 300);
+              }
+            } catch (e) {
+              console.error('Error parsing SSE:', e);
+            }
+          }
+        }
+      };
+
+      return xhr;
+    },
+    error: function(xhr) {
+      $('#progressSection').addClass('d-none');
+      $('#uploadSection').removeClass('d-none');
+      showResult('danger', xhr.responseJSON?.error || '{{ l.get("error_generic", "An error occurred") }}');
+    }
+  });
+});
+
+const tripTypes = {{ trip_types|tojson }};
+
+function renderTrips(trips) {
+  let html = '';
+  trips.forEach(function(t, i) {
+    const origin = t.origin || '?';
+    const dest = t.destination || '?';
+    const distance = t.distance ? (Math.round(t.distance / 100) / 10) + ' km' : '';
+    const duration = t.duration ? formatDuration(t.duration) : '';
+    const maprikaName = t.maprika_name || '';
+
+    html += '<div class="trip-card selected" data-index="' + i + '">';
+    html += '<div class="d-flex justify-content-between align-items-start">';
+    html += '<div class="flex-grow-1">';
+    html += '<div class="trip-header">' + origin + ' → ' + dest + '</div>';
+    if (maprikaName) {
+      html += '<div class="text-muted" style="font-size: 0.85em; margin-top: 0.25rem;"><i class="bi bi-tag me-1"></i>' + maprikaName + '</div>';
+    }
+    html += '</div>';
+    html += '<input type="checkbox" class="trip-checkbox form-check-input ms-2" checked style="width: 1.25rem; height: 1.25rem;">';
+    html += '</div>';
+    html += '<div class="trip-details">';
+    html += '<div class="row align-items-center mt-2">';
+    html += '<div class="col-md-4">';
+    html += '<select class="form-select form-select-sm trip-type-select" data-index="' + i + '">';
+    Object.keys(tripTypes).forEach(function(key) {
+      const selected = key === t.suggested_type ? 'selected' : '';
+      html += '<option value="' + key + '" ' + selected + '>' + tripTypes[key] + '</option>';
+    });
+    html += '</select>';
+    html += '</div>';
+    html += '<div class="col-md-8">';
+    const details = [];
+    if (t.start_time) details.push(t.start_time);
+    if (distance) details.push(distance);
+    if (duration) details.push(duration);
+    if (details.length) html += details.join(' · ');
+    html += '</div>';
+    html += '</div>';
+    if (t.notes) {
+      html += '<div class="mt-2"><small class="text-muted">' + t.notes + '</small></div>';
+    }
+    html += '</div></div>';
+  });
+  $('#tripsList').html(html);
+}
+
+function formatDuration(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (hours > 0) return hours + 'h ' + minutes + 'm';
+  return minutes + 'm';
+}
+
+$(document).on('click', '.trip-card', function(e) {
+  if ($(e.target).is('.trip-checkbox') || $(e.target).is('.trip-type-select')) return;
+  const $card = $(this);
+  const $cb = $card.find('.trip-checkbox');
+  $cb.prop('checked', !$cb.prop('checked'));
+  $card.toggleClass('selected', $cb.prop('checked'));
+});
+
+$(document).on('change', '.trip-checkbox', function() {
+  $(this).closest('.trip-card').toggleClass('selected', this.checked);
+});
+
+$(document).on('change', '.trip-type-select', function() {
+  const idx = $(this).data('index');
+  tripsData[idx].type = $(this).val();
+});
+
+function resetForm() {
+  selectedFiles = [];
+  tripsData = [];
+  renderFileList();
+  $('#uploadForm')[0].reset();
+  $('#previewSection').addClass('d-none');
+  $('#uploadSection').removeClass('d-none');
+}
+
+$('#backBtn, #cancelBtn').on('click', function() {
+  resetForm();
+});
+
+$('#saveBtn').on('click', async function() {
+  const selected = [];
+  $('.trip-checkbox:checked').each(function() {
+    const idx = $(this).closest('.trip-card').data('index');
+    const tripData = {...tripsData[idx]};
+    tripData.type = $('.trip-type-select[data-index="' + idx + '"]').val();
+    selected.push(tripData);
+  });
+
+  if (!selected.length) {
+    showResult('warning', '{{ l.get("select_at_least_one", "Select at least one trip") }}');
+    return;
+  }
+
+  // Show progress section
+  $('#previewSection').addClass('d-none');
+  $('#progressSection').removeClass('d-none');
+  $('#progressText').text('{{ l.get("processing_starting", "Starting...") }}');
+  $('#progressBar').css('width', '0%').text('0%');
+
+  let savedCount = 0;
+  const totalTrips = selected.length;
+
+  for (let i = 0; i < selected.length; i++) {
+    const trip = selected[i];
+    const progress = Math.round(((i + 1) / totalTrips) * 100);
+
+    $('#progressText').text('{{ l.get("saving_trip_progress", "Saving trip {current} of {total}...") }}'.replace('{current}', i + 1).replace('{total}', totalTrips));
+    $('#progressBar').css('width', progress + '%').text(progress + '%');
+
+    try {
+      await $.ajax({
+        url: URLS.save,
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ trips: [trip] })
+      });
+      savedCount++;
+    } catch (error) {
+      console.error('Error saving trip:', error);
+    }
+  }
+
+  // Hide progress, show result
+  $('#progressSection').addClass('d-none');
+  showResult('success', `<strong>${savedCount} {{ l.get("trips_saved", "trip(s) saved") }}</strong>`);
+
+  setTimeout(function() {
+    window.location.href = "{{ url_for('dynamic_trips', username=username, time='trips') }}";
+  }, 1500);
+});
+
+function showResult(type, message) {
+  $('#resultSection').removeClass('d-none');
+  $('#resultAlert').removeClass('alert-success alert-danger alert-warning').addClass('alert-' + type).html(message);
+}
+</script>
+{% endblock %}
