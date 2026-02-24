@@ -266,7 +266,7 @@
     "shareLevel1Details": "Yksittäisiä matkoja voidaan jakaa käyttäen matka-ID:itä, henkilökohtaiset tiedot piilottaen. Mutta <a href='{public_link}'>julkinen profiili</a> pysyy saavuttamattomissa.",
     "shareLevel2Details": "<a href='{public_link}'>Julkinen profiilisi</a> on nähtävissä käyttäjänimesi kautta.",
     "coverage": "Kattavuus",
-    "leaderboard": "Sijoitukset",
+    "leaderboard": "Sijoitustaulukko",
     "EU": "Eurooppa",
     "AF": "Afrikka",
     "AS": "Aasia",

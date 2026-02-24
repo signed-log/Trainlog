@@ -124,7 +124,7 @@
     "confirmDelete": "Biztosan törli ezt az utazást?",
     "confirmMultiDelete": "${tripNumber} utazás törlésére készül, biztos benne?",
     "confirmConfirm": "Tényleg TÉNYLEG biztos?",
-    "trainChange": "Vonatváltás",
+    "trainChange": "Átszállás",
     "stationChange": "Állomásváltás",
     "copyLink": "Link másolva",
     "lineName": "Vonal",
