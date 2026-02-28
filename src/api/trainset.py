@@ -1,4 +1,5 @@
 import json
+import shlex
 
 from flask import jsonify, request, render_template, Blueprint, session, redirect, url_for
 
@@ -33,32 +34,61 @@ def trainset_builder():
 
 @trainset_blueprint.route('/api/wagons/search')
 def search_wagons():
-    """Autocomplete search across nom, titre1, titre2, notes."""
+    """Autocomplete search across nom, titre1, titre2, notes.
+    Supports multi-term AND search across fields. Quoted phrases are kept together.
+    """
     username, _ = _session_user()
     if not username:
         return jsonify({'error': 'Unauthorized'}), 401
 
-    q     = request.args.get('q', '').strip()
-    limit = min(int(request.args.get('limit', 20)), 100)
+    q = request.args.get('q', '').strip()
+    try:
+        limit = min(int(request.args.get('limit', 20)), 100)
+    except (TypeError, ValueError):
+        limit = 20
+
     if not q:
         return jsonify([])
 
-    like   = f'%{q}%'
-    starts = f'{q}%'
+    # Terms: supports quotes, e.g. RRR "Grand Est"
+    try:
+        terms = [t.strip() for t in shlex.split(q) if t.strip()]
+    except ValueError:
+        # Fallback if user typed unmatched quotes
+        terms = [t for t in q.split() if t]
+
+    if not terms:
+        return jsonify([])
+
+    # Build: AND over terms, OR over fields
+    fields = ["nom", "titre1", "titre2", "notes"]
+    params = {"limit": limit, "q_like": f"%{q}%"}  # for ranking only
+    where_parts = []
+
+    for i, term in enumerate(terms):
+        key = f"t{i}"
+        params[key] = f"%{term}%"
+        where_parts.append("(" + " OR ".join([f"{f} ILIKE :{key}" for f in fields]) + ")")
+
+    where_sql = " AND ".join(where_parts)
+
+    # Ranking: boost exact/starts-with on nom for the full query (nice for autocomplete)
+    # You can add more ranking rules if you want.
+    params["q_starts"] = f"{q}%"
+
+    sql = f"""
+        SELECT source, titre1, titre2, nom, epo, datmaj, image, name, notes, typeligne, image_type
+        FROM wagons
+        WHERE {where_sql}
+        ORDER BY
+            CASE WHEN nom ILIKE :q_starts THEN 0 ELSE 1 END,
+            CASE WHEN nom ILIKE :q_like THEN 0 ELSE 1 END,
+            nom
+        LIMIT :limit
+    """
 
     with pg_session() as pg:
-        result = pg.execute(
-            """
-            SELECT source, titre1, titre2, nom, epo, datmaj, image, name, notes, typeligne, image_type
-            FROM wagons
-            WHERE nom ILIKE :like OR titre1 ILIKE :like OR titre2 ILIKE :like OR notes ILIKE :like
-            ORDER BY
-                CASE WHEN nom ILIKE :starts THEN 0 ELSE 1 END,
-                nom
-            LIMIT :limit
-            """,
-            {"like": like, "starts": starts, "limit": limit},
-        )
+        result = pg.execute(sql, params)
         rows = [dict(r) for r in result]
 
     return jsonify(rows)
