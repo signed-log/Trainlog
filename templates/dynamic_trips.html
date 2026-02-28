@@ -603,8 +603,8 @@ function processHiddenData(rowIdx, columns){
             var rawMat = rowData.material_type || '';
             var primary = rawAdv || rawMat;
             if (primary) {
-                var formatted = _formatTrainsetStr(primary);
-                if (rawAdv && rawMat) formatted += ' <span style="color:#888;font-size:.9em">' + rawMat + '</span>';
+                var formatted = rawAdv && rawMat ? rawMat : _formatTrainsetStr(primary);
+                if (rawAdv && rawMat) formatted += ' <span style="color:#888;font-size:.9em">' + _formatTrainsetStr(rawAdv) + '</span>';
                 if (_isValidMaterial(primary)) {
                     var safeName = (rowData.line_name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     var safeMat  = primary.replace(/'/g, "\\'").replace(/"/g, '&quot;');
@@ -847,7 +847,7 @@ function renderMaterialType(data, type, row){
     if (typeof TRAIN_TYPES !== 'undefined' && TRAIN_TYPES.includes(row.type)) {
         var adv = row.material_type_advanced || '';
         var mat = row.material_type || '';
-        if (adv && mat) return _formatTrainsetStr(adv) + ' <span style="color:#888;font-size:.9em">' + mat + '</span>';
+        if (adv && mat) return mat + ' <span style="color:#888;font-size:.9em">' + _formatTrainsetStr(adv) + '</span>';
         if (adv) return _formatTrainsetStr(adv);
         return mat;
     }
