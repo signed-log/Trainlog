@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Speichern & anwenden",
     "tsbBuildSection": "Aus Waggons bauen",
     "tsbNoResults": "Keine Ergebnisse",
+    "addUnknownWagon": "Als unbekannten Wagen hinzufügen",
+    "notInCatalogue": "Noch nicht im Katalog",
     "routeTrip": "Routenplanung",
     "sharedLink": "Geteilte Reise",
     "colorblindMode": "Farbenblindmodus"

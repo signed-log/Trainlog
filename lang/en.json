@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Save & apply",
     "tsbBuildSection": "Build from wagons",
     "tsbNoResults": "No results",
+    "addUnknownWagon": "Add as unknown wagon",
+    "notInCatalogue": "Not yet in catalogue",
     "routeTrip": "Trip Routing",
     "sharedLink": "Shared Trip",
     "colorblindMode": "Colourblind Mode"

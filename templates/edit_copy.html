@@ -1450,10 +1450,12 @@
                 url: copy ? "{{ url_for('copyTrip', username=username) }}" : "{{ url_for('updateTrip', username=username) }}",
                 data: formData,
                 success: function (res) {
-                    if (redirectToProjects) {
+                    var nextUrl = new URLSearchParams(window.location.search).get('next');
+                    if (nextUrl) {
+                        location.href = nextUrl;
+                    } else if (redirectToProjects) {
                         location.href = "{{ url_for('dynamic_trips', time='projects', username=username) }}";
-                    }
-                    else {
+                    } else {
                         location.href = "{{ url_for('dynamic_trips', time='trips', username=username) }}";
                     }
                 },

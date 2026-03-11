@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Spara & tillämpa",
     "tsbBuildSection": "Bygg från vagnar",
     "tsbNoResults": "Inga resultat",
+    "addUnknownWagon": "Lägg till som okänd vagn",
+    "notInCatalogue": "Inte ännu i katalogen",
     "routeTrip": "Ruttplanering",
     "sharedLink": "Delad resa",
     "colorblindMode": "Färgblindhetsläge"

@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "保存并应用",
     "tsbBuildSection": "从车厢构建",
     "tsbNoResults": "没有结果",
+    "addUnknownWagon": "添加为未知车厢",
+    "notInCatalogue": "尚未在目录中",
     "routeTrip": "行程路线规划",
     "sharedLink": "共享行程",
     "colorblindMode": "色盲模式"

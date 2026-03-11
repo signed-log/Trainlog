@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Opslaan & toepassen",
     "tsbBuildSection": "Bouwen van rijtuigen",
     "tsbNoResults": "Geen resultaten",
+    "addUnknownWagon": "Toevoegen als onbekende wagon",
+    "notInCatalogue": "Nog niet in catalogus",
     "routeTrip": "Routeplanning",
     "sharedLink": "Gedeelde reis",
     "colorblindMode": "Kleurenblindmodus"

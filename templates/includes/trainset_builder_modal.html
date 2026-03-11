@@ -60,11 +60,13 @@
   var _timer        = null;
   var WAGONS        = '{{ url_for("static", filename="images/wagons") }}';
   var _i18n         = {
-    noResults:  '{{tsbNoResults}}',
-    flip:       '{{tsFlipSide}}',
-    remove:     '{{remove}}',
-    saveFailed: '{{tsSaveFailed}}',
-    public:     '{{tsPubBadge}}'
+    noResults:       '{{tsbNoResults}}',
+    flip:            '{{tsFlipSide}}',
+    remove:          '{{remove}}',
+    saveFailed:      '{{tsSaveFailed}}',
+    public:          '{{tsPubBadge}}',
+    addUnknown:      '{{addUnknownWagon}}',
+    notInCatalogue:  '{{notInCatalogue}}'
   };
   var _adminSets    = [];
   var _personalSets = [];
@@ -244,7 +246,7 @@
       addStrong.textContent = '\u201c' + q + '\u201d';
       var addSub = document.createElement('div');
       addSub.style.fontSize = '.72rem';
-      addSub.textContent = 'Add as unknown wagon';
+      addSub.textContent = _i18n.addUnknown;
       addInfo.appendChild(addStrong);
       addInfo.appendChild(addSub);
       addBtn.appendChild(addInfo);

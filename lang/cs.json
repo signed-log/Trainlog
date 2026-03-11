@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Uložit a použít",
     "tsbBuildSection": "Postavit z vagonů",
     "tsbNoResults": "Žádné výsledky",
+    "addUnknownWagon": "Přidat jako neznámý vůz",
+    "notInCatalogue": "Ještě není v katalogu",
     "routeTrip": "Plánování trasy",
     "sharedLink": "Sdílený výlet",
     "colorblindMode": "Režim pro barvoslepé"

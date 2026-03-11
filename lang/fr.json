@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Enregistrer et appliquer",
     "tsbBuildSection": "Construire depuis des wagons",
     "tsbNoResults": "Aucun résultat",
+    "addUnknownWagon": "Ajouter comme wagon inconnu",
+    "notInCatalogue": "Pas encore dans le catalogue",
     "routeTrip": "Planification d’itinéraire",
     "sharedLink": "Voyage partagé",
     "colorblindMode": "Mode daltonien"

@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Kaydet ve uygula",
     "tsbBuildSection": "Vagonlardan oluştur",
     "tsbNoResults": "Sonuç yok",
+    "addUnknownWagon": "Bilinmeyen vagon olarak ekle",
+    "notInCatalogue": "Henüz katalogda değil",
     "routeTrip": "Rota planlama",
     "sharedLink": "Paylaşılan yolculuk",
     "colorblindMode": "Renk körü modu"

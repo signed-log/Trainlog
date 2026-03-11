@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Lagre og bruke",
     "tsbBuildSection": "Bygg fra vogner",
     "tsbNoResults": "Ingen resultater",
+    "addUnknownWagon": "Legg til som ukjent vogn",
+    "notInCatalogue": "Ikke ennå i katalogen",
     "routeTrip": "Ruteplanlegging",
     "sharedLink": "Delt tur",
     "colorblindMode": "Fargeblindmodus"

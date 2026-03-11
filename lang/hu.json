@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Mentés és alkalmazás",
     "tsbBuildSection": "Felépítés kocsikból",
     "tsbNoResults": "Nincs eredmény",
+    "addUnknownWagon": "Hozzáadás ismeretlen kocsiként",
+    "notInCatalogue": "Még nincs a katalógusban",
     "routeTrip": "Útvonaltervezés",
     "sharedLink": "Megosztott utazás",
     "colorblindMode": "Színvakság mód"

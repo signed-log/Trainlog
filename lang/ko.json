@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "저장 및 적용",
     "tsbBuildSection": "객차로 구성",
     "tsbNoResults": "결과 없음",
+    "addUnknownWagon": "알 수 없는 객차로 추가",
+    "notInCatalogue": "아직 목록에 없음",
     "routeTrip": "여행 경로",
     "sharedLink": "공유 여행",
     "colorblindMode": "색각 이상 모드"

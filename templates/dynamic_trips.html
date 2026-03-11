@@ -1056,10 +1056,19 @@ var table = $('#tripRows');
         return { columnFilters, globalSearch };
     }
 
-    var scroll = new URLSearchParams(window.location.search).get('scroll') === 'true'
-    var initialSearch = new URLSearchParams(window.location.search).get('search') || '';
+    var _urlParams = new URLSearchParams(window.location.search);
+    var scroll = _urlParams.get('scroll') === 'true';
+    var initialSearch = _urlParams.get('search') || '';
     var isPast = {{ (not projects)|lower }};
+    var _urlSortParam = _urlParams.get('sort');
+    var _initialPage = parseInt(_urlParams.get('page') || '0', 10);
+    var _initialRows = parseInt(_urlParams.get('rows') || '10', 10);
+    var _validRows = [10, 50, 100, -1].includes(_initialRows) ? _initialRows : 10;
     var customSort = { field: 'temporal', dir: isPast ? 'desc' : 'asc', label: '{{tripStartTime}}' };
+    if (_urlSortParam) {
+        var _sp = _urlSortParam.split(':');
+        if (_sp.length === 2) { customSort.field = _sp[0]; customSort.dir = _sp[1]; customSort.label = _sp[0]; }
+    }
     var tableObject = $('#dataTable').DataTable({
     processing: true,
     serverSide: true,
@@ -1166,6 +1175,8 @@ var table = $('#tripRows');
     },
     order: [],
     lengthMenu: [[10, 50, 100, -1], [10, 50, 100, "{{dtAll}}"]],
+    pageLength: _validRows,
+    displayStart: _initialPage * (_validRows > 0 ? _validRows : 0),
     paging: true,
     select: {
         style: 'multi+shift',
@@ -1200,13 +1211,30 @@ var table = $('#tripRows');
     updateSelectionMessage();
     addPageJumpInput();
 
-    // Sync search value to URL
+    // Sync table state to URL
     var searchVal = tableObject.search();
     var url = new URL(window.location);
     if (searchVal) {
         url.searchParams.set('search', searchVal);
     } else {
         url.searchParams.delete('search');
+    }
+    if (customSort.field) {
+        url.searchParams.set('sort', customSort.field + ':' + customSort.dir);
+    } else {
+        url.searchParams.delete('sort');
+    }
+    var _pi = tableObject.page.info();
+    if (_pi.page > 0) {
+        url.searchParams.set('page', _pi.page);
+    } else {
+        url.searchParams.delete('page');
+    }
+    var _len = tableObject.page.len();
+    if (_len !== 10) {
+        url.searchParams.set('rows', _len);
+    } else {
+        url.searchParams.delete('rows');
     }
     history.replaceState({}, '', url);
 }).on('select', function(e, dt, type, indexes) {
@@ -1232,6 +1260,15 @@ var table = $('#tripRows');
         hideMultilink();
     }
     updateSelectionMessage();
+});
+
+// Append ?next= to edit/copy links so we return to the same page after saving
+$(document).on('click', '.editButton, .copyButton', function(e) {
+    var href = $(this).attr('href');
+    if (href && !href.includes('?next=')) {
+        e.preventDefault();
+        window.location.href = href + '?next=' + encodeURIComponent(window.location.href);
+    }
 });
 
 (function() {
@@ -1277,6 +1314,16 @@ const sortGroups = [
         { label: '{{sortPrice}}',    field: 'price' },
     ]},
 ];
+
+// Resolve sort button label from sortGroups when sort was loaded from URL
+if (_urlSortParam) {
+    for (var _sg of sortGroups) {
+        for (var _si of _sg.items) {
+            if (_si.field === customSort.field) { customSort.label = _si.label; break; }
+        }
+    }
+    updateSortButton();
+}
 
 $('#sortModal').on('show.bs.modal', function() {
     const list = $('#sortColumnList');

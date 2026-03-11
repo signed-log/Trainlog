@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Сохранить и применить",
     "tsbBuildSection": "Построить из вагонов",
     "tsbNoResults": "Нет результатов",
+    "addUnknownWagon": "Добавить как неизвестный вагон",
+    "notInCatalogue": "Еще не в каталоге",
     "routeTrip": "Планирование маршрута",
     "sharedLink": "Совместная поездка",
     "colorblindMode": "Режим для дальтоников"

@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Salvar e aplicar",
     "tsbBuildSection": "Construir a partir de vagões",
     "tsbNoResults": "Sem resultados",
+    "addUnknownWagon": "Adicionar como vagão desconhecido",
+    "notInCatalogue": "Ainda não no catálogo",
     "routeTrip": "Planejamento de rota",
     "sharedLink": "Viagem compartilhada",
     "colorblindMode": "Modo daltônico"

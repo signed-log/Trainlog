@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Tallenna ja sovella",
     "tsbBuildSection": "Rakenna vaunuista",
     "tsbNoResults": "Ei tuloksia",
+    "addUnknownWagon": "Lisää tuntemattomana vaununa",
+    "notInCatalogue": "Ei vielä luettelossa",
     "routeTrip": "Reitin suunnittelu",
     "sharedLink": "Jaettu matka",
     "colorblindMode": "Värisokeustila"

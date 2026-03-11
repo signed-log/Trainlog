@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "保存して適用",
     "tsbBuildSection": "車両から作成",
     "tsbNoResults": "結果がありません",
+    "addUnknownWagon": "未知の車両として追加",
+    "notInCatalogue": "まだカタログにありません",
     "routeTrip": "旅行ルート",
     "sharedLink": "共有された旅行",
     "colorblindMode": "色覚モード"

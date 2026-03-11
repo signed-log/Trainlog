@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Salvesta ja rakenda",
     "tsbBuildSection": "Ehita vagunitest",
     "tsbNoResults": "Tulemusi pole",
+    "addUnknownWagon": "Lisa kui tundmatu vagun",
+    "notInCatalogue": "Veel ei ole kataloogis",
     "routeTrip": "Marsruudi planeerimine",
     "sharedLink": "Jagatud reis",
     "colorblindMode": "Värvipimeduse režiim"

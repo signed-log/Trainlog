@@ -853,6 +853,8 @@
     "tsbSaveAndUse": "Spremi i primijeni",
     "tsbBuildSection": "Izgradi od vagona",
     "tsbNoResults": "Nema rezultata",
+    "addUnknownWagon": "Dodaj kao nepoznati vagon",
+    "notInCatalogue": "Još nije u katalogu",
     "routeTrip": "Planiranje rute",
     "sharedLink": "Dijeljeno putovanje",
     "colorblindMode": "Način za daltonizam"

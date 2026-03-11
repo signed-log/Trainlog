@@ -664,6 +664,8 @@ const i18n = {
   saved:                 {{ tsSaved           | tojson }},
   loaded:                {{ tsLoaded          | tojson }},
   ready:                 {{ tsReady           | tojson }},
+  addUnknown:            {{ addUnknownWagon   | tojson }},
+  notInCatalogue:        {{ notInCatalogue    | tojson }},
 };
 
 let currentTs = null;   // { id, name, is_admin, username, units[] }
@@ -756,7 +758,7 @@ function renderAc() {
       <div class="ac-thumb"><span class="ac-thumb-none" style="opacity:.5">＋</span></div>
       <div class="ac-text">
         <div class="ac-nom">&#8220;${esc(q)}&#8221;</div>
-        <div class="ac-cat" style="font-style:italic">Add as unknown wagon</div>
+        <div class="ac-cat" style="font-style:italic">${esc(i18n.addUnknown)}</div>
       </div>
     </div>`;
   }
