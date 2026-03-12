@@ -24,21 +24,17 @@
     .compo-container::-webkit-scrollbar-thumb:hover { background: #6a6a8a; }
 
     /* Inline (child row) trainset scroll wrapper */
-    .trainset-inline-scroll { display: block; overflow-x: auto; overflow-y: hidden; margin-top: 4px; padding-bottom: 16px; }
+    .trainset-inline-scroll { display: block; overflow-x: auto; overflow-y: hidden; padding-bottom: 16px; }
     .trainset-inline-scroll .compo-strip { min-width: unset; }
     /* Wagon labels on light background */
     .ts-nom-inline { color: #444 !important; background: rgba(0,0,0,0.07) !important; }
-    /* Inline trainset: icon + label + scroller side by side */
-    .ts-inline-wrapper { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
-    .ts-inline-wrapper .trainset-inline-scroll { margin-top: 0; }
-    .ts-inline-label { flex: 0 0 auto; max-width: 120px; font-size: 0.82em; line-height: 1.4; color: #555; }
+    /* Inline trainset: label above scroller */
+    .ts-inline-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 4px; }
+    .ts-inline-label { font-size: 0.82em; line-height: 1.4; color: #555; }
     .ts-inline-personal { display: block; font-style: italic; }
     .ts-inline-saved { display: block; font-weight: 600; }
-    .ts-attr-icon { cursor: pointer; color: #aaa; font-size: 1em; vertical-align: middle; flex: 0 0 auto; }
-    /* Small screens: names above, strip below spanning full width */
+    .ts-attr-icon { cursor: pointer; color: #aaa; font-size: 1em; vertical-align: middle; }
     @media (max-width: 767px) {
-        .ts-inline-wrapper { flex-direction: column; align-items: flex-start; gap: 4px; }
-        .ts-inline-label { max-width: none; }
         .ts-inline-wrapper .trainset-inline-scroll { max-width: calc(100vw - 24px) !important; }
     }
 
@@ -277,17 +273,14 @@ function _renderTrainsetInline(rowId, units, labels) {
     var attr = _attributionText(units);
     var $icon = attr ? $('<span class="ts-attr-icon" data-toggle="tooltip" data-placement="bottom" title="' + attr + '">&#9432;</span>') : null;
     $container.addClass('ts-inline-wrapper');
-    if ($icon) $container.append($icon);
-    if (labelHtml) {
+    if (labelHtml || $icon) {
         var $label = $('<div class="ts-inline-label"></div>').html(labelHtml);
-        var $scroller = $('<div class="trainset-inline-scroll"></div>')
-            .css('max-width', (tableW - 160 - ($icon ? 30 : 0) - 130) + 'px').append(strip);
-        $container.append($label).append($scroller);
-    } else {
-        var $scroller = $('<div class="trainset-inline-scroll"></div>')
-            .css('max-width', (tableW - 160 - ($icon ? 30 : 0)) + 'px').append(strip);
-        $container.append($scroller);
+        if ($icon) $label.prepend($icon);
+        $container.append($label);
     }
+    var $scroller = $('<div class="trainset-inline-scroll"></div>')
+        .css('max-width', (tableW - 160) + 'px').append(strip);
+    $container.append($scroller);
     $container.find('[data-toggle="tooltip"]').tooltip();
 }
 </script>
