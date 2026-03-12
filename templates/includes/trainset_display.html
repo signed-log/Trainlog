@@ -28,12 +28,14 @@
     .trainset-inline-scroll .compo-strip { min-width: unset; }
     /* Wagon labels on light background */
     .ts-nom-inline { color: #444 !important; background: rgba(0,0,0,0.07) !important; }
-    /* Inline trainset: label above scroller */
-    .ts-inline-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 4px; }
-    .ts-inline-label { font-size: 0.82em; line-height: 1.4; color: #555; }
-    .ts-inline-personal { display: block; font-style: italic; }
-    .ts-inline-saved { display: block; font-weight: 600; }
-    .ts-attr-icon { cursor: pointer; color: #aaa; font-size: 1em; vertical-align: middle; }
+    /* Inline trainset: strip then label as caption below */
+    .ts-inline-wrapper { display: flex; flex-direction: column; align-items: flex-start; gap: 0; margin-top: 4px; }
+    .ts-inline-header { display: flex; align-items: center; gap: 4px; }
+    .ts-inline-label { font-size: 0.82em; line-height: 1.3; color: #666; margin-top: 1px; }
+    .ts-inline-personal { display: inline; font-style: italic; }
+    .ts-inline-saved { display: inline; font-weight: 600; }
+    .ts-inline-personal + .ts-inline-saved::before { content: ' · '; font-style: normal; font-weight: normal; color: #aaa; }
+    .ts-attr-icon { cursor: pointer; color: rgba(0,0,0,0.4); font-size: 0.7em; position: absolute; top: 1px; left: 2px; z-index: 5; line-height: 1; }
     @media (max-width: 767px) {
         .ts-inline-wrapper .trainset-inline-scroll { max-width: calc(100vw - 24px) !important; }
     }
@@ -272,15 +274,14 @@ function _renderTrainsetInline(rowId, units, labels) {
     if (labels.saved && labels.saved !== labels.personal) labelHtml += '<span class="ts-inline-saved">' + esc(labels.saved) + '</span>';
     var attr = _attributionText(units);
     var $icon = attr ? $('<span class="ts-attr-icon" data-toggle="tooltip" data-placement="bottom" title="' + attr + '">&#9432;</span>') : null;
+    if ($icon) strip.children().first().append($icon);
     $container.addClass('ts-inline-wrapper');
-    if (labelHtml || $icon) {
-        var $label = $('<div class="ts-inline-label"></div>').html(labelHtml);
-        if ($icon) $label.prepend($icon);
-        $container.append($label);
-    }
     var $scroller = $('<div class="trainset-inline-scroll"></div>')
         .css('max-width', (tableW - 160) + 'px').append(strip);
     $container.append($scroller);
+    if (labelHtml) {
+        $container.append($('<div class="ts-inline-label"></div>').html(labelHtml));
+    }
     $container.find('[data-toggle="tooltip"]').tooltip();
 }
 </script>
