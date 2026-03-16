@@ -1266,13 +1266,10 @@ var table = $('#tripRows');
     updateSelectionMessage();
 });
 
-// Append ?next= to edit/copy links so we return to the same page after saving
-$(document).on('click', '.editButton, .copyButton', function(e) {
-    var href = $(this).attr('href');
-    if (href && !href.includes('?next=')) {
-        e.preventDefault();
-        window.location.href = href + '?next=' + encodeURIComponent(window.location.href);
-    }
+// Update ?next= on the href just before navigation so it reflects the current URL (including filters/sort/page)
+$(document).on('mousedown', '.editButton, .copyButton', function() {
+    var base = $(this).attr('href').split('?')[0];
+    $(this).attr('href', base + '?next=' + encodeURIComponent(window.location.href));
 });
 
 (function() {
