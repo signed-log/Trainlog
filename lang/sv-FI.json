@@ -890,5 +890,7 @@
     "soon": "snart",
     "moneySpent": "Utgifter",
     "co2Emissions": "CO₂-utsläpp",
-    "total": "Totalt"
+    "total": "Totalt",
+    "byMode": "Per läge",
+    "mode": "Läge"
 }

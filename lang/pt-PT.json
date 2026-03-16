@@ -890,5 +890,7 @@
     "soon": "em breve",
     "moneySpent": "Despesa",
     "co2Emissions": "Emissões de CO₂",
-    "total": "Total"
+    "total": "Total",
+    "byMode": "Por modo",
+    "mode": "Modo"
 }

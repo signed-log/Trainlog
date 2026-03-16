@@ -890,5 +890,7 @@
     "soon": "yakında",
     "moneySpent": "Giderler",
     "co2Emissions": "CO₂ Emisyonları",
-    "total": "Toplam"
+    "total": "Toplam",
+    "byMode": "Moda göre",
+    "mode": "Mod"
 }

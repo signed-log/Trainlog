@@ -638,6 +638,40 @@ def dashboard_year(username):
             p,
         ).fetchone()
 
+        # ── Per-mode stats ────────────────────────────────────────────────────
+        _dur_expr = (
+            "COALESCE(EXTRACT(EPOCH FROM (utc_end_datetime - utc_start_datetime)),"
+            " manual_trip_duration, estimated_trip_duration, 0)"
+        )
+        mode_alltime_rows = pg.execute(
+            f"""
+            SELECT trip_type,
+                   COUNT(*) AS trips,
+                   COALESCE(SUM(trip_length), 0) / 1000 AS km,
+                   COALESCE(SUM({_dur_expr}), 0) AS duration_sec
+            FROM trips
+            WHERE user_id = :uid AND NOT is_project
+              AND COALESCE(utc_start_datetime, start_datetime) < NOW()
+            GROUP BY trip_type ORDER BY km DESC
+            """,
+            p,
+        ).fetchall()
+
+        mode_ytd_rows = pg.execute(
+            f"""
+            SELECT trip_type,
+                   COUNT(*) AS trips,
+                   COALESCE(SUM(trip_length), 0) / 1000 AS km,
+                   COALESCE(SUM({_dur_expr}), 0) AS duration_sec
+            FROM trips
+            WHERE user_id = :uid AND NOT is_project
+              AND EXTRACT(YEAR FROM COALESCE(utc_start_datetime, start_datetime)) = :yr
+              AND COALESCE(utc_start_datetime, start_datetime) <= :cutoff
+            GROUP BY trip_type ORDER BY km DESC
+            """,
+            p,
+        ).fetchall()
+
         # ── CO2 ───────────────────────────────────────────────────────────────
         co2_alltime_rows = pg.execute(
             """
@@ -853,6 +887,9 @@ def dashboard_year(username):
         # CO2
         "co2_alltime": _build_co2(co2_alltime_rows),
         "co2_ytd":     _build_co2(co2_ytd_rows),
+        # Per-mode breakdown
+        "mode_alltime": [{"type": r.trip_type, "trips": int(r.trips), "km": round(float(r.km), 1), "sec": int(r.duration_sec)} for r in mode_alltime_rows],
+        "mode_ytd":     [{"type": r.trip_type, "trips": int(r.trips), "km": round(float(r.km), 1), "sec": int(r.duration_sec)} for r in mode_ytd_rows],
     }
 
     _cache_set(cache_key, result)

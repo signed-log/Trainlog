@@ -890,5 +890,7 @@
     "soon": "snart",
     "moneySpent": "Udgifter",
     "co2Emissions": "CO₂-udledning",
-    "total": "I alt"
+    "total": "I alt",
+    "byMode": "Efter tilstand",
+    "mode": "Tilstand"
 }

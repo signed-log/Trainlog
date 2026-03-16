@@ -890,5 +890,7 @@
     "soon": "pian",
     "moneySpent": "Kustannukset",
     "co2Emissions": "CO₂-päästöt",
-    "total": "Yhteensä"
+    "total": "Yhteensä",
+    "byMode": "Tilojen mukaan",
+    "mode": "Tila"
 }

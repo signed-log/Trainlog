@@ -890,5 +890,7 @@
     "soon": "snart",
     "moneySpent": "Utgifter",
     "co2Emissions": "CO₂-utslipp",
-    "total": "Total"
+    "total": "Total",
+    "byMode": "Etter modus",
+    "mode": "Modus"
 }

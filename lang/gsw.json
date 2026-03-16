@@ -890,5 +890,7 @@
     "soon": "gliich",
     "moneySpent": "Usgabeflücht",
     "co2Emissions": "CO₂-Usstoss",
-    "total": "Total"
+    "total": "Total",
+    "byMode": "Nach Modus",
+    "mode": "Modus"
 }

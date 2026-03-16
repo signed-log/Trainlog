@@ -890,5 +890,7 @@
     "soon": "uskoro",
     "moneySpent": "Rashodi",
     "co2Emissions": "Emisije CO₂",
-    "total": "Ukupno"
+    "total": "Ukupno",
+    "byMode": "Prema načinu",
+    "mode": "Način"
 }

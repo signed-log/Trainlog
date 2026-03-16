@@ -230,6 +230,14 @@
   .bar-row-value { font-weight: 600; font-size: 0.88rem; color: #111827; white-space: nowrap; }
   .bar-row-track { height: 5px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
   .bar-row-fill  { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+  .mode-table { width: 100%; border-collapse: collapse; }
+  .mode-table tr { border-bottom: 1px solid #f1f5f9; }
+  .mode-table tr:last-child { border-bottom: none; }
+  .mode-table td { padding: 0.6rem 1.25rem; vertical-align: middle; }
+  .mode-table .mode-name { display: flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; font-weight: 500; color: #374151; white-space: nowrap; }
+  .mode-table .mode-name i { color: var(--primary-color); width: 14px; text-align: center; }
+  .mode-table .mode-num { text-align: right; font-size: 0.82rem; font-weight: 600; color: #111827; white-space: nowrap; }
+  .mode-table .mode-unit { font-size: 0.72rem; font-weight: 400; color: var(--text-muted); margin-left: 1px; }
   .change-up   { color: #059669; font-size: 0.75rem; margin-left: 0.3rem; }
   .change-down { color: #dc2626; font-size: 0.75rem; margin-left: 0.3rem; }
 
@@ -650,23 +658,37 @@
       </div>
     </div>
 
-    <!-- Country completion (collapsible) -->
-    <div class="completion-card dash-row" id="completion-section">
-      <div class="card-header-custom" id="completion-toggle">
-        <i class="bi bi-percent"></i>
-        <span>{{coverage}}</span>
-        <span class="collapse-chevron">▼</span>
+    <!-- Row 5: Mode summary + Country completion -->
+    <div class="row dash-row g-3">
+      <div class="col-md-6">
+        <div class="dash-card" style="height:100%;">
+          <div class="dash-card-header"><i class="bi bi-bar-chart-steps"></i>{{ byMode }}<span id="mode-scope-label" style="margin-left:auto;font-weight:400;color:var(--text-muted);text-transform:none;letter-spacing:0;font-size:0.78rem;"></span></div>
+          <div class="dash-card-body" id="mode-body" style="padding:0;">
+            <div class="skeleton skeleton-line medium"></div>
+            <div class="skeleton skeleton-line short"></div>
+            <div class="skeleton skeleton-line medium"></div>
+          </div>
+        </div>
       </div>
-      <div id="completion-body">
-        <table class="table completion-table" id="completion-table">
-          <thead>
-            <tr>
-              <th style="width:55%">{{ leaderboardCountry }}</th>
-              <th style="width:45%">{{ leaderboardPercent }}</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="col-md-6">
+        <div class="completion-card" id="completion-section" style="height:100%;margin:0;">
+          <div class="card-header-custom" id="completion-toggle">
+            <i class="bi bi-percent"></i>
+            <span>{{coverage}}</span>
+            <span class="collapse-chevron">▼</span>
+          </div>
+          <div id="completion-body">
+            <table class="table completion-table" id="completion-table">
+              <thead>
+                <tr>
+                  <th style="width:55%">{{ leaderboardCountry }}</th>
+                  <th style="width:45%">{{ leaderboardPercent }}</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -986,7 +1008,7 @@ function renderRecords(d, scope) {
 }
 
 const TYPE_ORDER = ["train","tram","metro","bus","air","ferry","car","walk","cycle","helicopter","aerialway"];
-const TYPE_LABELS = {"train":"{{ train }}","tram":"{{ tram }}","metro":"{{ metro }}","bus":"{{ bus }}","air":"{{ air }}","ferry":"{{ ferry }}","car":"{{ car }}","walk":"{{ walk }}","cycle":"{{ cycle }}","helicopter":"{{ helicopter }}","aerialway":"{{ aerialway }}"};
+const TYPE_LABELS = {"train":"{{ train }}","tram":"{{ tram }}","metro":"{{ metro }}","bus":"{{ bus }}","air":"{{ air }}","ferry":"{{ ferry }}","car":"{{ car }}","walk":"{{ walk }}","cycle":"{{ cycle }}","helicopter":"{{ helicopter }}","aerialway":"{{ aerialway }}","accommodation":"{{ accommodation }}","poi":"{{ poi }}","restaurant":"{{ restaurant }}"};
 
 function barRow(label, value, pct, color) {
   return `<div class="bar-row">
@@ -1027,9 +1049,28 @@ function renderCO2(d, scope) {
   document.getElementById("co2-body").innerHTML = rows.join("");
 }
 
+function renderModeStats(d, scope) {
+  const rows = scope === "alltime" ? d.mode_alltime : d.mode_ytd;
+  const el = document.getElementById("mode-body");
+  if (!rows || !rows.length) { el.innerHTML = emptyState("{{ noDataYet }}"); return; }
+  const trs = rows.map(r => `
+    <tr>
+      <td class="mode-name"><i class="${tripIcon(r.type)}"></i>${TYPE_LABELS[r.type] || r.type}</td>
+      <td class="mode-num">${fmt(r.trips)}<span class="mode-unit">{{ trips }}</span></td>
+      <td class="mode-num">${fmt(Math.round(r.km))}<span class="mode-unit">km</span></td>
+      <td class="mode-num">${r.sec > 0 ? secondsToDhm(r.sec, "{{ langId }}") : "—"}</td>
+    </tr>`).join("");
+  el.innerHTML = `<table class="table completion-table mode-table"><thead><tr>
+    <th>{{ mode }}</th>
+    <th style="text-align:right;">{{ trips }}</th>
+    <th style="text-align:right;">km</th>
+    <th style="text-align:right;">{{ hoursOnTrains }}</th>
+  </tr></thead><tbody>${trs}</tbody></table>`;
+}
+
 function updateScopeLabels(scope, year) {
   const lbl = scope === "alltime" ? "{{ allTime }}" : String(year);
-  ["highlights-scope-label","records-scope-label","money-scope-label","co2-scope-label"].forEach(id => {
+  ["highlights-scope-label","records-scope-label","money-scope-label","co2-scope-label","mode-scope-label"].forEach(id => {
     document.getElementById(id).textContent = lbl;
   });
 }
@@ -1041,12 +1082,13 @@ function applyHlData(d) {
   renderRecords(d, _hlScope);
   renderMoney(d, _hlScope);
   renderCO2(d, _hlScope);
+  renderModeStats(d, _hlScope);
   updateScopeLabels(_hlScope, d.year);
 }
 
 function fetchYearData(year) {
   const skel = `<div class="skeleton skeleton-line medium"></div><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line medium"></div>`;
-  ["year-body", "highlights-body", "records-body", "money-body", "co2-body"].forEach(id => {
+  ["year-body", "highlights-body", "records-body", "money-body", "co2-body", "mode-body"].forEach(id => {
     document.getElementById(id).innerHTML = skel;
   });
   fetch(`/u/${username}/dashboard_year?year=${year}`)
@@ -1085,7 +1127,7 @@ document.getElementById("hl-scope-toggle").addEventListener("click", e => {
   document.querySelectorAll("#hl-scope-toggle button.rank-metric-btn").forEach(b => b.classList.remove("active"));
   document.getElementById("hl-year-select").classList.remove("active");
   btn.classList.add("active");
-  if (_hlData) { renderYearCard(_hlData); renderHighlights(_hlData, _hlScope); renderRecords(_hlData, _hlScope); renderMoney(_hlData, _hlScope); renderCO2(_hlData, _hlScope); updateScopeLabels(_hlScope, _hlYear); }
+  if (_hlData) { renderYearCard(_hlData); renderHighlights(_hlData, _hlScope); renderRecords(_hlData, _hlScope); renderMoney(_hlData, _hlScope); renderCO2(_hlData, _hlScope); renderModeStats(_hlData, _hlScope); updateScopeLabels(_hlScope, _hlYear); }
   fetchLeaderboard(null);
 });
 
@@ -1099,7 +1141,7 @@ function _applyYearScope() {
   _hlYear = parseInt(_hlYearSel.value);
   if (wasAllTime && _hlData) {
     renderYearCard(_hlData); renderHighlights(_hlData, _hlScope); renderRecords(_hlData, _hlScope);
-    renderMoney(_hlData, _hlScope); renderCO2(_hlData, _hlScope); updateScopeLabels(_hlScope, _hlYear);
+    renderMoney(_hlData, _hlScope); renderCO2(_hlData, _hlScope); renderModeStats(_hlData, _hlScope); updateScopeLabels(_hlScope, _hlYear);
   } else {
     fetchYearData(_hlYear);
   }

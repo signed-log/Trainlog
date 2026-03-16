@@ -890,5 +890,7 @@
     "soon": "すぐに",
     "moneySpent": "支出",
     "co2Emissions": "CO₂排出量",
-    "total": "合計"
+    "total": "合計",
+    "byMode": "モード別",
+    "mode": "モード"
 }

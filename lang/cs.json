@@ -890,5 +890,7 @@
     "soon": "brzy",
     "moneySpent": "Výdaje",
     "co2Emissions": "Emise CO₂",
-    "total": "Celkem"
+    "total": "Celkem",
+    "byMode": "Podle režimu",
+    "mode": "Režim"
 }

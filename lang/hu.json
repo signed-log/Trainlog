@@ -890,5 +890,7 @@
     "soon": "hamarosan",
     "moneySpent": "Kiadások",
     "co2Emissions": "CO₂-kibocsátás",
-    "total": "Összesen"
+    "total": "Összesen",
+    "byMode": "Üzemmód szerint",
+    "mode": "Üzemmód"
 }

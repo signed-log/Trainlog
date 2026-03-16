@@ -890,5 +890,7 @@
     "soon": "peagi",
     "moneySpent": "Kulu",
     "co2Emissions": "CO₂ emissioonid",
-    "total": "Kokku"
+    "total": "Kokku",
+    "byMode": "Režiimi järgi",
+    "mode": "Režiim"
 }

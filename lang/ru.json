@@ -890,5 +890,7 @@
     "soon": "скоро",
     "moneySpent": "Расходы",
     "co2Emissions": "Выбросы CO₂",
-    "total": "Итого"
+    "total": "Итого",
+    "byMode": "По режиму",
+    "mode": "Режим"
 }

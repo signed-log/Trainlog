@@ -890,5 +890,7 @@
     "soon": "binnenkort",
     "moneySpent": "Uitgaven",
     "co2Emissions": "CO₂-uitstoot",
-    "total": "Totaal"
+    "total": "Totaal",
+    "byMode": "Per modus",
+    "mode": "Modus"
 }
