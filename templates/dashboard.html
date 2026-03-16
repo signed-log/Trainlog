@@ -936,12 +936,20 @@ function renderHighlights(d, scope) {
   const opVal = op => op.logo
     ? `<img src="/static/${op.logo}" style="height:1.4rem;max-width:5rem;object-fit:contain;vertical-align:middle;" title="${op.name}" onerror="this.replaceWith(document.createTextNode('${op.name.replace(/'/g,"\\'")}'))">`
     : op.name;
+  const subRow = (label, value, sub) =>
+    `<div class="stat-row" style="padding-left:1.1rem;">
+      <div><div class="stat-label" style="color:var(--text-muted);">${label}</div>${sub ? `<div class="stat-sub">${sub}</div>` : ""}</div>
+      <span class="stat-value">${value}</span>
+    </div>`;
   if (ops && ops.length) {
-    rows.push(statRow("{{ topOperator }}", opVal(ops[0]), `${fmt(ops[0].trips)} {{ trips }}`));
-    if (ops[1]) rows.push(statRow("", opVal(ops[1]), `${fmt(ops[1].trips)} {{ trips }}`));
+    rows.push(statRow("{{ topOperator }}", ""));
+    ops.slice(0, 3).forEach(op =>
+      rows.push(subRow(opVal(op), `${fmt(op.trips)} {{ trips }}`)));
   }
   if (routes && routes.length) {
-    rows.push(statRow("{{ topRoute }}", routes[0].name, `×${routes[0].count}`));
+    rows.push(statRow("{{ topRoute }}", ""));
+    routes.slice(0, 3).forEach(r =>
+      rows.push(subRow(r.name, `×${r.count}`)));
   }
   const flags = countryFlags(countries);
   if (flags) rows.push(statRow("{{ leaderboardCountry }}", flags));
