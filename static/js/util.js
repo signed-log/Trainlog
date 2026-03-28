@@ -431,7 +431,7 @@ function getTooltipFromStationNew(station){
     
 }
 
-function getFlagEmojiListNew(countriesString){
+function getFlagEmojiListNew(countriesString, tripType){
   var flagList = "\u00A0";
   var countriesDict = JSON.parse(countriesString);
   var countriesList = Object.keys(countriesDict);
@@ -456,7 +456,8 @@ function getFlagEmojiListNew(countriesString){
             parts.push(`⚡${mToKm(countryData.elec)}km`);
           }
           if (countryData.nonelec) {
-            parts.push(`🛢️${mToKm(countryData.nonelec)}km`);
+            var nonelecIcon = (tripType === 'cycle' || tripType === 'scooter') ? '🦵' : '🛢️';
+            parts.push(`${nonelecIcon}${mToKm(countryData.nonelec)}km`);
           }
           title = `${CountryName} - ${parts.join(' ')}`;
         }

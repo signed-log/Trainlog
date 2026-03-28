@@ -9,7 +9,7 @@ const MapConfig = {
         { id: 'bus', icon: 'fa-bus', color: '#9f4bbb' },
         { id: 'car', icon: 'fa-car-side', color: '#a68fcd' },
         { id: 'cycle', icon: 'fa-bicycle', color: '#6e211a' },
-        { id: 'e_scooter', icon: 'fa-motorcycle', color: '#00d084' },
+        { id: 'scooter', icon: 'fa-motorcycle', color: '#00d084' },
         { id: 'funicular', icon: 'fa-mountain', color: '#6495ed' },
         { id: 'rail', icon: 'fa-dumbbell', color: '#7ec8ff' },
         { id: 'ski', icon: 'fa-person-skiing', color: '#b8e6f0' },

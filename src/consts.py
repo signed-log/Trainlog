@@ -20,7 +20,7 @@ class TripTypes(str, Enum):
     BUS = "bus"
     CAR = "car"
     CYCLE = "cycle"
-    E_SCOOTER = "e_scooter"
+    SCOOTER = "scooter"
     FERRY = "ferry"
     FUNICULAR = "funicular"
     HELICOPTER = "helicopter"
@@ -45,7 +45,7 @@ class TripTypes(str, Enum):
             (cls.AERIAL_WAY),
             (cls.AIR, cls.HELICOPTER),
             (cls.BUS, cls.CAR),
-            (cls.CYCLE, cls.E_SCOOTER),
+            (cls.CYCLE, cls.SCOOTER),
             (cls.FERRY,),
             (cls.METRO, cls.TRAIN, cls.TRAM, cls.FUNICULAR, cls.RAIL),
             (cls.SKI,),

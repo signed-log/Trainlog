@@ -12,7 +12,7 @@ def forward_routing_core(routingType, path, flask_request, extra_args=None):
     # Normalize routing type
     if routingType in ("train", "tram", "metro", "funicular", "rail"):
         routingType = "train"
-    elif routingType == "e_scooter":
+    elif routingType == "scooter":
         routingType = "cycle"
 
     radiuses = None

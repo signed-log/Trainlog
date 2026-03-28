@@ -169,10 +169,11 @@
                 <th data-orderable="false" data-sort-field="trip_speed">{{tripSpeed}}</th>
                 <th data-orderable="false" data-sort-field="operator">{{operator}}</th>
                 <th data-orderable="false" data-sort-field="line_name">{{lineName}}</th>
-                <th>{{crossedCountries}}</th>
+                <th title="{{crossedCountries}}"><i class="fas fa-globe"></i></th>
+                <th data-orderable="false" title="{{co2Emissions}}"><i class="fas fa-leaf"></i></th>
                 {% if not isPublic %}
-                <th>{{visibility}}</th>
-                <th data-orderable="false" data-sort-field="price">{{price}}</th>
+                <th title="{{visibility}}"><i class="fas fa-eye"></i></th>
+                <th data-orderable="false" data-sort-field="price" title="{{price}}"><i class="fas fa-coins"></i></th>
                 {% endif %}
                 <th data-orderable="false" class="none">{{material_type}}</th>
                 <th data-orderable="false" class="none">{{reg}}</th>
@@ -486,6 +487,8 @@ function toggleTypeFilter() {
 }
 
 function isEllipsisActive(el){
+  if (!el) return false;
+  if (el.scrollWidth > el.clientWidth) return true;
   const styles = getComputedStyle(el);
   const widthEl = parseFloat(styles.width);
   const ctx = document.createElement('canvas').getContext('2d');
@@ -495,7 +498,6 @@ function isEllipsisActive(el){
 }
 
 function processHiddenData(rowIdx, columns){
-    var ellipsedStation = isEllipsisActive(tableObject.cell(rowIdx, 1).node()) || isEllipsisActive(tableObject.cell(rowIdx, 2).node())
     var isAir = ["air", "helicopter"].includes($(tableObject.cell(rowIdx, 0).node())[0].firstChild.innerText);
     var isFerry = $(tableObject.cell(rowIdx, 0).node())[0].firstChild.innerText == "ferry";
     var isTrain = TRAIN_TYPES.includes($(tableObject.cell(rowIdx, 0).node())[0].firstChild.innerText);
@@ -712,10 +714,30 @@ function processHiddenData(rowIdx, columns){
             }
         }
         if (col.title != ""){
-            return (col.hidden || ([1,2].includes(col.columnIndex) && ellipsedStation)) && col.data != ""?
+            var thAttrTitle = $($('#dataTable thead th').get(col.columnIndex)).attr('title');
+            var label = thAttrTitle || col.title;
+            // For icon-only columns, pair each icon with its tooltip text, one line per item
+            var displayData = col.data;
+            if (thAttrTitle) {
+                var $cell = $('<div>').html(col.data);
+                var pairs = [];
+                $cell.children().each(function() {
+                    var $el = $(this);
+                    var text = $el.attr('title') || $el.attr('data-bs-original-title') || '';
+                    if (text) pairs.push($el.prop('outerHTML') + ' <span class="text-muted small">' + text + '</span>');
+                });
+                if (!pairs.length) {
+                    // Single element (no children), try the root
+                    var rootText = $cell.find('[title]').first().attr('title')
+                                || $cell.find('[data-bs-original-title]').first().attr('data-bs-original-title') || '';
+                    if (rootText) pairs.push(col.data + ' <span class="text-muted small">' + rootText + '</span>');
+                }
+                if (pairs.length) displayData = pairs.join('<br>');
+            }
+            return (col.hidden || isEllipsisActive(tableObject.cell(rowIdx, col.columnIndex).node())) && col.data != ""?
             '<tr data-dt-row="'+col.rowIndex+'" data-dt-column="'+col.columnIndex+'">'+
-                '<td><strong>'+col.title+':</strong>'+'</td> '+
-                '<td>'+col.data+'</td>'+
+                '<td><strong>'+label+':</strong>'+'</td> '+
+                '<td>'+displayData+'</td>'+
             '</tr>' :
             '';
         }
@@ -873,9 +895,18 @@ function renderSpeed(data, type, row) {
     return data;
 }
 
+function renderCarbon(data, type, row) {
+    if (type !== 'display') return data || 0;
+    if (!data || data <= 0) return '';
+    const co2PerKm = calculateCO2PerKm(data, row.trip_length);
+    const color = getCarbonColor(co2PerKm);
+    const tooltip = `${formatCarbonFootprint(data)} (${formatCO2PerKm(co2PerKm)})`;
+    return `<span data-toggle="tooltip" data-placement="top" title="${tooltip}" style="cursor:context-menu; color:${color};"><i class="fas fa-leaf"></i></span>`;
+}
+
 function renderFlags(data, type, row) {
     if (type === 'display') {
-        return getFlagEmojiListNew(data);
+        return getFlagEmojiListNew(data, row.type);
     }
     return data;
 }
@@ -1137,6 +1168,12 @@ var table = $('#tripRows');
         { data: 'operator', render: renderOperators },
         {data: 'line_name',{% if is_alpha %} render: renderLineName,{% endif %}},
         { data: 'countries', render: renderFlags },
+        {
+            data: 'carbon_footprint',
+            render: renderCarbon,
+            defaultContent: "",
+            orderable: false
+        },
         {% if not isPublic %}
         { data: 'visibility', render: renderVisibility },
         {

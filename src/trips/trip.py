@@ -52,6 +52,8 @@ class Trip:
         visibility=None,
         departure_delay=None,
         arrival_delay=None,
+        power_type=None,
+        co2_override=None,
     ):
         self.trip_id = trip_id
         self.username = username
@@ -85,6 +87,8 @@ class Trip:
         self.departure_delay = departure_delay
         self.arrival_delay = arrival_delay
         self.path = path
+        self.power_type = power_type
+        self.co2_override = co2_override
         self.carbon = (
             calculate_carbon_footprint_for_trip(vars(self), path) if path else None
         )

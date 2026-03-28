@@ -521,7 +521,7 @@ def get_default_trip_visibility(x):
             return "private"
         case "cycle":
             return "private"
-        case "e_scooter":
+        case "scooter":
             return "private"
         case "ferry":
             return "public"

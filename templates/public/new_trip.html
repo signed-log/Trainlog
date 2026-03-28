@@ -513,7 +513,7 @@ function buildItinerary(trips, prices) {
         $(".kmModeProportion").css("grid-template-columns", sortArray.map(x => total_length_per_type[x.key].toString() + "fr").join(" "));
         $(".timeModeProportion").css("grid-template-columns", sortArray.map(x => total_duration_per_type[x.key].toString() + "fr").join(" "));
         if (total_carbon > 0) {
-            $(".carbonProportion").css("grid-template-columns", sortArray.map(x => (total_carbon_per_type[x.key] || 0).toString() + "fr").join(" "));
+            $(".carbonProportion").css("grid-template-columns", sortArray.map(x => ((total_carbon_per_type[x.key] || 0) * 1000).toString() + "fr").join(" "));
         }
 
         $(".modeProportionIcon.trip").attr("title", `{{totalTrips}}: ${total_trips}`);

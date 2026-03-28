@@ -97,7 +97,7 @@
             <a class="dropdown-item" href="{{ url_for('new', username=username, vehicle_type="cycle") }}"><i class="fa-solid fa-bicycle"></i> {{cycle}}</a>
             {% if is_alpha %}
             <a class="dropdown-item" href="{{ url_for('new', username=username, vehicle_type="ski") }}"><i class="fa-solid fa-person-skiing"></i> {{ski}}</a>
-            <a class="dropdown-item" href="{{ url_for('new', username=username, vehicle_type="e_scooter") }}"><i class="bi bi-scooter"></i> {{e_scooter}}</a>
+            <a class="dropdown-item" href="{{ url_for('new', username=username, vehicle_type="scooter") }}"><i class="bi bi-scooter"></i> {{scooter}}</a>
             {% endif %}         
             <a class="dropdown-item" href="{{ url_for('new', username=username, vehicle_type="car") }}"><i class="fa-solid fa-car-side"></i> {{car}}</a>
             <hr class="dropdown-divider">

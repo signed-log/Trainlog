@@ -7,7 +7,7 @@
   --ferry: rgb(30, 30, 124);
   --car: rgb(166, 143, 205);
   --cycle: rgb(110, 33, 26);
-  --e_scooter: rgb(0, 208, 132);
+  --scooter: rgb(0, 208, 132);
   --funicular: rgb(100, 149, 237);
   --rail: rgb(126, 200, 255);
   --ski: rgb(184, 230, 240);
@@ -1184,8 +1184,8 @@ html, body {
 }
 
 /* Personal mobility polylines */
-.e_scooterPolyline {
-  stroke: var(--e_scooter);
+.scooterPolyline {
+  stroke: var(--scooter);
   stroke-dasharray: 10, 12;
 }
 

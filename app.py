@@ -749,6 +749,8 @@ def saveTripToDb(username, newTrip, newPath, trip_type="train"):
         visibility=sanitize_param(newTrip.get("visibility", get_default_trip_visibility(trip_type))),
         departure_delay=sanitize_param(newTrip.get("departure_delay")),
         arrival_delay=sanitize_param(newTrip.get("arrival_delay")),
+        power_type=newTrip.get("powerType"),
+        co2_override=float(newTrip["co2Override"]) if newTrip.get("co2Override") else None,
     )
 
     create_trip(trip)
@@ -1043,7 +1045,7 @@ def inject_distinct_types():
         "walk": "fa-solid fa-person-hiking",
         "cycle": "fa-solid fa-bicycle",
         "car": "fa-solid fa-car-side",
-        "e_scooter": "fa-solid fa-motorcycle",
+        "scooter": "fa-solid fa-motorcycle",
         "funicular": "fa-solid fa-mountain",
         "rail": "fa-solid fa-dumbbell",
         "ski": "fa-solid fa-person-skiing",
@@ -1272,7 +1274,7 @@ def new(username, vehicle_type):
             "destinationStationName"
         ]
 
-    elif vehicle_type == "e_scooter":
+    elif vehicle_type == "scooter":
         manual_origin = lang[session["userinfo"]["lang"]]["manOrigin"]
         new_trip = lang[session["userinfo"]["lang"]].get("newTripEScooter", "New Trip - E-Scooter")
         origin_terminal = lang[session["userinfo"]["lang"]].get("originEScooter", lang[session["userinfo"]["lang"]]["originBike"])
@@ -1685,7 +1687,7 @@ def list_gpx(username):
         "ferry": lang[session["userinfo"]["lang"]]["ferry"],
         "car": lang[session["userinfo"]["lang"]]["car"],
         "cycle": lang[session["userinfo"]["lang"]]["cycle"],
-        "e_scooter": lang[session["userinfo"]["lang"]]["e_scooter"],
+        "scooter": lang[session["userinfo"]["lang"]]["scooter"],
         "walk": lang[session["userinfo"]["lang"]]["walk"],
         "aerialway": lang[session["userinfo"]["lang"]]["aerialway"],
         "ski": lang[session["userinfo"]["lang"]]["ski"],
@@ -1845,7 +1847,7 @@ def saveTripFromGPX(username, gpx_id):
 
     # Process the route based on user preferences
     if use_routing and trip_type in [
-        "train", "metro", "tram", "funicular", "rail", "ferry", "aerialway", "bus", "car", "walk", "cycle", "e_scooter"
+        "train", "metro", "tram", "funicular", "rail", "ferry", "aerialway", "bus", "car", "walk", "cycle", "scooter"
     ]:
         # Use advanced GPS cleaning instead of basic routing
         print(f"Processing GPS route with {len(raw_waypoints)} points using smart routing...")
@@ -2013,7 +2015,7 @@ def upload_gpx_advanced(username):
         "ferry": lang[session["userinfo"]["lang"]]["ferry"],
         "car": lang[session["userinfo"]["lang"]]["car"],
         "cycle": lang[session["userinfo"]["lang"]]["cycle"],
-        "e_scooter": lang[session["userinfo"]["lang"]]["e_scooter"],
+        "scooter": lang[session["userinfo"]["lang"]]["scooter"],
         "walk": lang[session["userinfo"]["lang"]]["walk"],
         "aerialway": lang[session["userinfo"]["lang"]]["aerialway"],
         "ski": lang[session["userinfo"]["lang"]]["ski"],
@@ -5917,6 +5919,14 @@ def processPublicTrips(tripIds):
             abort(401)
     tripIds = tripIds.split(",")
 
+    # Fetch stored carbon values from PG in one query
+    with pg_session() as pg:
+        pg_rows = pg.execute(
+            "SELECT trip_id, carbon FROM trips WHERE trip_id = ANY(:ids)",
+            {"ids": [int(t) for t in tripIds]},
+        ).fetchall()
+    pg_carbon = {row["trip_id"]: row["carbon"] for row in pg_rows}
+
     tripList = []
 
     formattedGetUserLines = getUserLines.format(
@@ -5990,9 +6000,13 @@ def processPublicTrips(tripIds):
             if trip["price_in_user_currency"] is not None:
                 total_price += trip["price_in_user_currency"]
 
-        # Calculate carbon footprint
+        # Use stored carbon from PG if available, otherwise recalculate (legacy trips)
+        stored_carbon = pg_carbon.get(trip["uid"])
         path_data = json.loads(paths[trip["uid"]]) if trip["uid"] in paths else []
-        trip_carbon = calculate_carbon_footprint_for_trip(trip, path_data)
+        if stored_carbon is not None:
+            trip_carbon = float(stored_carbon)
+        else:
+            trip_carbon = calculate_carbon_footprint_for_trip(trip, path_data)
         trip["carbon_footprint"] = round(trip_carbon, 6)
         
         # Add to totals
@@ -6527,6 +6541,27 @@ def get_trips_api_internal(username, is_public=False):
 
     # Format trips for display
     trip_list = [formatTrip(trip) for trip in trip_dicts]
+
+    # Attach carbon_footprint: prefer stored PG value, fall back to inline calculation
+    trip_ids = [trip["uid"] for trip in trip_list if trip.get("uid")]
+    if trip_ids:
+        try:
+            with pg_session() as pg:
+                pg_rows = pg.execute(
+                    "SELECT trip_id, carbon FROM trips WHERE trip_id = ANY(:ids)",
+                    {"ids": [int(tid) for tid in trip_ids]},
+                ).fetchall()
+            pg_carbon = {row["trip_id"]: row["carbon"] for row in pg_rows}
+        except Exception:
+            pg_carbon = {}
+        for trip in trip_list:
+            stored = pg_carbon.get(trip.get("uid"))
+            if stored is not None:
+                trip["carbon_footprint"] = round(float(stored), 6)
+            else:
+                trip["carbon_footprint"] = round(
+                    calculate_carbon_footprint_for_trip(trip, []), 6
+                )
 
     # Return the JSON for DataTables
     return jsonify(
