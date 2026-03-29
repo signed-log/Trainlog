@@ -701,6 +701,7 @@
     "visibility_private": "Приватний",
     "bulk_change_visibility": "Встановити видимість",
     "massEdit": "Масове редагування",
+    "changeType": "Змінити тип",
     "multipleValues": "Кілька значень",
     "notesReplace": "Замінити",
     "notesAppend": "Додати в кінець",

@@ -701,6 +701,7 @@
     "visibility_private": "Privatno",
     "bulk_change_visibility": "Postavi vidljivost",
     "massEdit": "Masovno uređivanje",
+    "changeType": "Promijeni vrstu",
     "multipleValues": "Više vrijednosti",
     "notesReplace": "Zamijeni",
     "notesAppend": "Dodaj na kraj",

@@ -701,6 +701,7 @@
     "visibility_private": "Soukromé",
     "bulk_change_visibility": "Nastavit viditelnost",
     "massEdit": "Hromadná úprava",
+    "changeType": "Změnit typ",
     "multipleValues": "Více hodnot",
     "notesReplace": "Nahradit",
     "notesAppend": "Připojit na konec",

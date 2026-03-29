@@ -701,6 +701,7 @@
     "visibility_private": "Privé",
     "bulk_change_visibility": "Verander zichtbaarheid",
     "massEdit": "Massa bewerken",
+    "changeType": "Type wijzigen",
     "multipleValues": "Meerdere waarden",
     "notesReplace": "Vervangen",
     "notesAppend": "Toevoegen aan einde",

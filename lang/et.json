@@ -701,6 +701,7 @@
     "visibility_private": "Privaatne",
     "bulk_change_visibility": "Nähtavuse määramine",
     "massEdit": "Massiline redigeerimine",
+    "changeType": "Muuda tüüpi",
     "multipleValues": "Mitmed väärtused",
     "notesReplace": "Asenda",
     "notesAppend": "Lisa lõppu",

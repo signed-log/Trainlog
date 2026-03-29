@@ -193,6 +193,8 @@ from src.trips import (
     update_trip_type,
     attach_ticket_to_trips,
     bulk_edit_trips,
+    bulk_change_type,
+    bulk_set_power_type,
     change_trips_visibility,
     delete_ticket_from_db,
     get_current_trip_id,
@@ -6101,6 +6103,51 @@ def changeTripType(username, tripType, tripIds):
     except Exception as e:
         logger.exception(e)
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/u/<username>/bulkChangeType", methods=["POST"])
+@login_required
+def bulkChangeType(username):
+    data = request.get_json()
+    if not data or "trip_ids" not in data or "new_type" not in data:
+        return jsonify({"error": "Missing parameters"}), 400
+    try:
+        new_type = TripTypes.from_str(data["new_type"])
+    except ValueError:
+        return jsonify({"error": "Invalid type"}), 400
+
+    trip_ids = data["trip_ids"]
+    # Validate all trips are in the same transformable group
+    with managed_cursor(mainConn) as cursor:
+        placeholders = ", ".join(["?"] * len(trip_ids))
+        cursor.execute(
+            f"SELECT DISTINCT type FROM trip WHERE username = ? AND uid IN ({placeholders})",
+            [username] + trip_ids,
+        )
+        current_types = [TripTypes.from_str(r["type"]) for r in cursor.fetchall()]
+    for ct in current_types:
+        if not TripTypes.can_transform(ct, new_type):
+            return jsonify({"error": f"Cannot change from '{ct}' to '{new_type}'"}), 400
+
+    success, error = bulk_change_type(username, trip_ids, new_type)
+    if success:
+        return jsonify({"success": 1}), 200
+    return jsonify({"error": error}), 500
+
+
+@app.route("/u/<username>/bulkSetPowerType", methods=["POST"])
+@login_required
+def bulkSetPowerType(username):
+    data = request.get_json()
+    if not data or "trip_ids" not in data or "power_type" not in data:
+        return jsonify({"error": "Missing parameters"}), 400
+    power_type = data["power_type"]
+    if power_type not in ("electric", "thermic", "manual", "auto"):
+        return jsonify({"error": "Invalid power_type"}), 400
+    success, error = bulk_set_power_type(username, data["trip_ids"], power_type)
+    if success:
+        return jsonify({"success": 1}), 200
+    return jsonify({"error": error}), 500
 
 
 @app.route("/u/<username>/merge/<tripIds>", methods=["GET", "POST"])

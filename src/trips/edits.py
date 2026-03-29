@@ -1,8 +1,10 @@
 import datetime
+import json
 
 from flask import abort
 from sqlalchemy import text
 
+from src.carbon import calculate_carbon_footprint_for_trip
 from src.consts import TripTypes
 from src.pg import pg_session
 from src.sql.trips import (
@@ -11,7 +13,7 @@ from src.sql.trips import (
     update_ticket_null_query,
     update_trip_type_query,
 )
-from src.utils import mainConn, managed_cursor
+from src.utils import mainConn, managed_cursor, pathConn
 
 from .trip import _strip_tags
 from .utils import compare_trip
@@ -241,6 +243,99 @@ def bulk_edit_trips(
         for trip_id in trip_ids:
             compare_trip(trip_id)
 
+        mainConn.commit()
+        return True, None
+    except Exception as e:
+        mainConn.rollback()
+        return False, str(e)
+
+
+def bulk_change_type(username, trip_ids, new_type: TripTypes):
+    last_modified = datetime.datetime.now()
+    try:
+        placeholders = ", ".join(["?"] * len(trip_ids))
+        with managed_cursor(mainConn) as cursor:
+            cursor.execute(
+                f"SELECT COUNT(*) as c FROM trip WHERE username = ? AND uid IN ({placeholders})",
+                [username] + trip_ids,
+            )
+            if cursor.fetchone()["c"] != len(trip_ids):
+                abort(401)
+            cursor.execute(
+                f"UPDATE trip SET type = ?, last_modified = ? WHERE username = ? AND uid IN ({placeholders})",
+                [new_type.value, last_modified, username] + trip_ids,
+            )
+        with pg_session() as pg:
+            for trip_id in trip_ids:
+                pg.execute(
+                    text("UPDATE trips SET trip_type = :t, last_modified = :lm WHERE trip_id = :id"),
+                    {"t": new_type.value, "lm": last_modified, "id": int(trip_id)},
+                )
+        for trip_id in trip_ids:
+            compare_trip(trip_id)
+        mainConn.commit()
+        return True, None
+    except Exception as e:
+        mainConn.rollback()
+        return False, str(e)
+
+
+def bulk_set_power_type(username, trip_ids, power_type: str):
+    """Recalculate countries (elec/nonelec split) and carbon for each trip based on new power_type."""
+    from py.utils import getCountriesFromPath
+    last_modified = datetime.datetime.now()
+    try:
+        placeholders = ", ".join(["?"] * len(trip_ids))
+        with managed_cursor(mainConn) as cursor:
+            cursor.execute(
+                f"SELECT uid, type, trip_length, countries, start_datetime FROM trip WHERE username = ? AND uid IN ({placeholders})",
+                [username] + trip_ids,
+            )
+            trips = {row["uid"]: dict(row) for row in cursor.fetchall()}
+        if len(trips) != len(trip_ids):
+            abort(401)
+
+        updates = []
+        for trip_id in trip_ids:
+            trip = trips[int(trip_id)]
+            # Load path
+            formatted = "({})".format(int(trip_id))
+            with managed_cursor(pathConn) as cursor:
+                row = cursor.execute(
+                    f"SELECT path FROM paths WHERE trip_id = {int(trip_id)}"
+                ).fetchone()
+            if row is None:
+                continue
+            path = json.loads(row["path"])
+            path_dicts = [{"lat": p[0], "lng": p[1]} for p in path]
+
+            new_countries = getCountriesFromPath(path_dicts, trip["type"], powerType=power_type)
+            trip_for_carbon = {
+                "type": trip["type"],
+                "trip_length": trip["trip_length"],
+                "countries": new_countries,
+                "start_datetime": trip["start_datetime"],
+                "power_type": power_type,
+            }
+            carbon = calculate_carbon_footprint_for_trip(trip_for_carbon, path)
+            updates.append((new_countries, carbon, int(trip_id)))
+
+        with managed_cursor(mainConn) as cursor:
+            for new_countries, carbon, trip_id in updates:
+                cursor.execute(
+                    "UPDATE trip SET countries = ?, last_modified = ? WHERE uid = ?",
+                    [new_countries, last_modified, trip_id],
+                )
+
+        with pg_session() as pg:
+            for new_countries, carbon, trip_id in updates:
+                pg.execute(
+                    text("UPDATE trips SET countries = :c, carbon = :carbon, last_modified = :lm WHERE trip_id = :id"),
+                    {"c": new_countries, "carbon": carbon, "lm": last_modified, "id": trip_id},
+                )
+
+        for trip_id in trip_ids:
+            compare_trip(trip_id)
         mainConn.commit()
         return True, None
     except Exception as e:

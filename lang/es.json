@@ -701,6 +701,7 @@
     "visibility_private": "Privado",
     "bulk_change_visibility": "Establecer visibilidad",
     "massEdit": "Edición masiva",
+    "changeType": "Cambiar tipo",
     "multipleValues": "Valores múltiples",
     "notesReplace": "Reemplazar",
     "notesAppend": "Anexar",

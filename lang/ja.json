@@ -701,6 +701,7 @@
     "visibility_private": "非公開",
     "bulk_change_visibility": "公開範囲を設定",
     "massEdit": "一括編集",
+    "changeType": "タイプを変更",
     "multipleValues": "複数の値",
     "notesReplace": "置換",
     "notesAppend": "追加",

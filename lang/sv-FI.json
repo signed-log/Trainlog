@@ -701,6 +701,7 @@
     "visibility_private": "Privat",
     "bulk_change_visibility": "Ställ in synlighet",
     "massEdit": "Massredigera",
+    "changeType": "Ändra typ",
     "multipleValues": "Flera värden",
     "notesReplace": "Byta ut",
     "notesAppend": "Lägg till i slutet",

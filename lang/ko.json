@@ -701,6 +701,7 @@
     "visibility_private": "비공개",
     "bulk_change_visibility": "공개 범위 설정",
     "massEdit": "대량 수정",
+    "changeType": "유형 변경",
     "multipleValues": "여러 값",
     "notesReplace": "교체",
     "notesAppend": "추가",

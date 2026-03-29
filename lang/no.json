@@ -701,6 +701,7 @@
     "visibility_private": "Privat",
     "bulk_change_visibility": "Angi synlighet",
     "massEdit": "Masseendring",
+    "changeType": "Endre type",
     "multipleValues": "Flere verdier",
     "notesReplace": "Erstatt",
     "notesAppend": "Legg til på slutten",

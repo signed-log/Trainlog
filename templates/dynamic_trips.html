@@ -426,6 +426,27 @@
             <option value="private">{{visibility_private}}</option>
           </select>
         </div>
+        <div id="massEditTypeSection" style="display:none">
+          <hr class="my-2" />
+          <div class="mb-3">
+            <label class="form-label">{{changeType}}</label>
+            <select class="form-select" id="massEditNewType">
+              <option value="">—</option>
+            </select>
+          </div>
+        </div>
+        <div id="massEditPowerSection" style="display:none">
+          <hr class="my-2" />
+          <div class="mb-3">
+            <label class="form-label">{{powerType}}</label>
+            <select class="form-select" id="massEditPowerType">
+              <option value="">—</option>
+              <option value="electric">{{electric}}</option>
+              <option value="thermic">{{thermic}}</option>
+              <option value="manual">{{manual}}</option>
+            </select>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{cancel}}</button>
@@ -1691,6 +1712,80 @@ function openMassEdit() {
     // Reset notes mode to replace
     document.getElementById('massEditNotesReplace').checked = true;
 
+    // Type groups (must match Python TripTypes.can_transform groups)
+    const TYPE_GROUPS = [
+        ['accomodation', 'poi', 'restaurant'],
+        ['air', 'helicopter'],
+        ['bus', 'car'],
+        ['cycle', 'scooter'],
+        ['ferry'],
+        ['metro', 'train', 'tram', 'funicular', 'rail'],
+        ['ski'],
+        ['walk'],
+        ['other'],
+    ];
+    // Power-type-capable types
+    const POWER_TYPE_RULES = {
+        train:   ['electric', 'thermic'],
+        rail:    ['electric', 'thermic'],
+        bus:     ['electric', 'thermic'],
+        car:     ['electric', 'thermic'],
+        ferry:   ['electric', 'thermic'],
+        cycle:   ['electric', 'manual'],
+        scooter: ['electric', 'manual']
+    };
+    const tripTypes = trips.map(t => t.type);
+    const uniqueTypes = [...new Set(tripTypes)];
+    const group = TYPE_GROUPS.find(g => uniqueTypes.every(t => g.includes(t)));
+    const typeSection = document.getElementById('massEditTypeSection');
+    const newTypeSelect = document.getElementById('massEditNewType');
+    newTypeSelect.innerHTML = '<option value="">—</option>';
+    if (group && group.length > 1) {
+        const currentType = uniqueTypes.length === 1 ? uniqueTypes[0] : null;
+        group.filter(t => t !== currentType).forEach(function(t) {
+            const opt = document.createElement('option');
+            opt.value = t;
+            opt.textContent = (window.TYPE_LABELS && window.TYPE_LABELS[t]) || t;
+            newTypeSelect.appendChild(opt);
+        });
+        typeSection.style.display = '';
+    } else {
+        typeSection.style.display = 'none';
+    }
+
+    // Power type section: show if all trips are power-type-capable
+    const powerSection = document.getElementById('massEditPowerSection');
+    const powerTypeSelect = document.getElementById('massEditPowerType');
+    powerTypeSelect.innerHTML = '<option value="">—</option>';
+
+    const allowedPowerSets = uniqueTypes.map(t => POWER_TYPE_RULES[t]).filter(Boolean);
+    const allPowerCapable = allowedPowerSets.length === uniqueTypes.length;
+
+    if (allPowerCapable) {
+        // Keep only power types allowed by all selected trip types
+        const commonPowerTypes = allowedPowerSets.reduce((acc, arr) =>
+            acc.filter(v => arr.includes(v))
+        );
+
+        if (commonPowerTypes.length > 0) {
+            commonPowerTypes.forEach(function(pt) {
+                const opt = document.createElement('option');
+                opt.value = pt;
+                opt.textContent = {
+                    electric: '{{electric}}',
+                    thermic: '{{thermic}}',
+                    manual: '{{manual}}'
+                }[pt] || pt;
+                powerTypeSelect.appendChild(opt);
+            });
+            powerSection.style.display = '';
+        } else {
+            powerSection.style.display = 'none';
+        }
+    } else {
+        powerSection.style.display = 'none';
+    }
+
     $('#massEditModal').modal('show');
 }
 
@@ -1762,7 +1857,10 @@ function submitMassEdit() {
     const shiftMinutes = parseInt(document.getElementById('massEditShiftMinutes').value, 10) || 0;
     const timeShift = shiftDays * 1440 + shiftHours * 60 + shiftMinutes;
 
-    if (Object.keys(fields).length === 0 && !timeShift) {
+    const newType = document.getElementById('massEditNewType').value;
+    const newPowerType = document.getElementById('massEditPowerType').value;
+
+    if (Object.keys(fields).length === 0 && !timeShift && !newType && !newPowerType) {
         $('#massEditModal').modal('hide');
         return;
     }
@@ -1773,19 +1871,41 @@ function submitMassEdit() {
     document.getElementById('massEditSubmitLabel').style.display = 'none';
     document.getElementById('massEditSpinner').style.display = '';
 
-    fetch('{{ url_for("bulkEditTrips", username=username) }}', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ trip_ids: checkedTrips, fields: fields, notes_append: notesAppend, time_offset_minutes: timeShift })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.success) {
+    const requests = [];
+
+    if (Object.keys(fields).length > 0 || timeShift) {
+        requests.push(fetch('{{ url_for("bulkEditTrips", username=username) }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trip_ids: checkedTrips, fields: fields, notes_append: notesAppend, time_offset_minutes: timeShift })
+        }).then(r => r.json()));
+    }
+
+    if (newType) {
+        requests.push(fetch('{{ url_for("bulkChangeType", username=username) }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trip_ids: checkedTrips, new_type: newType })
+        }).then(r => r.json()));
+    }
+
+    if (newPowerType) {
+        requests.push(fetch('{{ url_for("bulkSetPowerType", username=username) }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ trip_ids: checkedTrips, power_type: newPowerType })
+        }).then(r => r.json()));
+    }
+
+    Promise.all(requests)
+    .then(function(results) {
+        const failed = results.find(d => !d.success);
+        if (failed) {
+            alert(failed.error || 'Error');
+        } else {
             tableObject.ajax.reload();
             $('#massEditModal').modal('hide');
             deselectAll();
-        } else {
-            alert(data.error || 'Error');
         }
     })
     .finally(function() {
@@ -2073,6 +2193,14 @@ $('#submitBtn').on('click', function() {
     }
 
     const TRAIN_TYPES = ['train', 'metro', 'tram'];
+
+    window.TYPE_LABELS = {
+        train: '{{train}}', tram: '{{tram}}', metro: '{{metro}}', rail: '{{rail}}',
+        funicular: '{{funicular}}', bus: '{{bus}}', car: '{{car}}', ferry: '{{ferry}}',
+        air: '{{air}}', helicopter: '{{helicopter}}', walk: '{{walk}}', cycle: '{{cycle}}',
+        scooter: '{{scooter}}', ski: '{{ski}}', aerialway: '{{aerialway}}',
+        accomodation: '{{accommodation}}', poi: '{{poi}}', restaurant: '{{restaurant}}', other: '{{other}}'
+    };
 
     const CLASS_LABELS = {
         '1st': '1st', '2nd': '2nd', '2nd-plus': '2+', 'business': 'Biz',

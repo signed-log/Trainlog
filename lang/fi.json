@@ -701,6 +701,7 @@
     "visibility_private": "Yksityinen",
     "bulk_change_visibility": "Aseta näkyvyys",
     "massEdit": "Massamuokkaus",
+    "changeType": "Vaihda tyyppi",
     "multipleValues": "Useita arvoja",
     "notesReplace": "Korvaa",
     "notesAppend": "Lisää loppuun",

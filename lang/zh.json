@@ -701,6 +701,7 @@
     "visibility_private": "私人",
     "bulk_change_visibility": "设置可见性",
     "massEdit": "批量编辑",
+    "changeType": "更改类型",
     "multipleValues": "多个值",
     "notesReplace": "替换",
     "notesAppend": "附加",

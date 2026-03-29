@@ -701,6 +701,7 @@
     "visibility_private": "Privát",
     "bulk_change_visibility": "Láthatóság beállítása",
     "massEdit": "Tömeges szerkesztés",
+    "changeType": "Típus módosítása",
     "multipleValues": "Több érték",
     "notesReplace": "Csere",
     "notesAppend": "Hozzáfűzés",

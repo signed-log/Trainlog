@@ -701,6 +701,7 @@
     "visibility_private": "Частный",
     "bulk_change_visibility": "Установить видимость",
     "massEdit": "Массовое редактирование",
+    "changeType": "Изменить тип",
     "multipleValues": "Несколько значений",
     "notesReplace": "Заменить",
     "notesAppend": "Добавить в конец",
