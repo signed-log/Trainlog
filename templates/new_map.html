@@ -398,7 +398,7 @@ function showPopup(e) {
     const coordinates = e.lngLat;
 
     const isOwner = location.href === "{{ url_for('user_home', username=username, _external=True) }}";
-    const tripUrl = "{{ url_for('public_trip_new', tripIds='TRIP_ID') }}".replace('TRIP_ID', properties.id);
+    const tripUrl = "{{ url_for('public_trip', tripIds='TRIP_ID') }}".replace('TRIP_ID', properties.id);
     const editUrl = "{{ url_for('edit_copy_trip', username=username, edit_copy_type='edit', tripId='TRIP_ID') }}".replace('TRIP_ID', properties.id);
 
     const popupContent = `

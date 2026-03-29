@@ -61,8 +61,7 @@
       <label for="default_landing">{{defaultLanding}}</label>
       <select class="form-select" name="default_landing" id="default_landing">
         <option value="dashboard" {% if default_landing=="dashboard" %}selected{% endif %}>🏠 {{user_dashboard}}</option>
-        <option value="map" {% if default_landing=="map" %}selected{% endif %}>🗺️ {{map}}</option>
-        <option value="new_map" {% if default_landing=="new_map" %}selected{% endif %}>🌍 {{map}} β</option>
+        <option value="map" {% if default_landing=="map" or default_landing=="new_map" %}selected{% endif %}>🗺️ {{map}}</option>
         <option value="trips" {% if default_landing=="trips" %}selected{% endif %}>🕰️ {{trips}}</option>
         <option value="projects" {% if default_landing=="projects" %}selected{% endif %}>🕒 {{projectList}}</option>
       </select>
@@ -83,42 +82,11 @@
         {% endfor %}
       </select>
       <hr>
-      <label for="tileserver">{{ tilesetLabel }}</label>
-      <select class="form-select tileserver-select" name="tileserver" id="tileserver">
-        <!-- General -->
-        <option value="osm" {% if user_tileserver=="osm" %}selected{% endif %}>🗺️ {{ tileserver_default }}
-        </option>
-
-        <!-- Country-specific -->
-        <option value="de" {% if user_tileserver=="de" %}selected{% endif %}>🇩🇪 {{ tileserver_de }}</option>
-        <option value="fr" {% if user_tileserver=="fr" %}selected{% endif %}>🇫🇷 {{ tileserver_fr }}</option>
-
-        <!-- Jawg Raster -->
-        <option value="jawg-streets" {% if user_tileserver=="jawg-streets" %}selected{% endif %}>🛣️ {{
-          tileserver_jawg_streets }}</option>
-        <option value="jawg-light" {% if user_tileserver=="jawg-light" %}selected{% endif %}>☀️ {{ tileserver_jawg_light
-          }}</option>
-        <option value="jawg-dark" {% if user_tileserver=="jawg-dark" %}selected{% endif %}>🌙 {{ tileserver_jawg_dark }}
-        </option>
-        <option value="jawg-sunny" {% if user_tileserver=="jawg-sunny" %}selected{% endif %}>🌞 {{ tileserver_jawg_sunny
-          }}</option>
-        <option value="jawg-terrain" {% if user_tileserver=="jawg-terrain" %}selected{% endif %}>⛰️ {{
-          tileserver_jawg_terrain }}</option>
-        <option value="jawg-lagoon" {% if user_tileserver=="jawg-lagoon" %}selected{% endif %}>🏖️ {{
-          tileserver_jawg_lagoon }}</option>
-
-        <!-- Thunderforest -->
-        <option value="thunderforest-transport" {% if user_tileserver=="thunderforest-transport" %}selected{% endif %}>
-          🚌 {{ tileserver_thunderforest_transport }}</option>
-
-        {% if is_premium %}
-        <!-- Jawg Vector Versions (distinct but thematically tied) -->
-        <option value="jawg-streets-v2" class="vector-map" {% if user_tileserver=="jawg-streets-v2" %}selected{% endif
-          %}>🛣️💎 Streets V2 (vector)</option>
-        <option value="jawg-lagoon-v2" class="vector-map" {% if user_tileserver=="jawg-lagoon-v2" %}selected{% endif %}>
-          🏖️💎 Lagoon V2 (vector)</option>
-        {% endif %}
-      </select>
+      <label>{{ tilesetLabel }}</label>
+      <button type="button" class="form-select text-start" id="tileserverPickerBtn" style="cursor:pointer;">
+        <i class="fa-solid fa-map me-2" id="tileserverPickerIcon"></i><span id="tileserverPickerLabel"></span>
+      </button>
+      <input type="hidden" id="tileserver" name="tileserver" value="{{ user_tileserver }}">
 
       {% if is_premium %}
       <div class="form-check form-switch mt-2">
@@ -232,6 +200,137 @@
 </div>
 
 
+<!-- Tileserver picker modal -->
+<div class="modal fade" id="tileserverModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="fa-solid fa-map me-2"></i>{{ tilesetLabel }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-tabs mb-3" id="tileserverTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#ts-general" type="button">OpenStreetMap</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ts-jawg" type="button">Jawg</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ts-ofm" type="button">OpenFreeMap</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#ts-other" type="button">{{ other }}</button>
+          </li>
+        </ul>
+        <div class="tab-content">
+
+          <!-- OpenStreetMap tab -->
+          <div class="tab-pane fade show active" id="ts-general">
+            <div class="ts-grid">
+              <button type="button" class="ts-option" data-value="osm">
+                <i class="fa-solid fa-map"></i><span>{{ tileserver_default }}</span>
+              </button>
+              <button type="button" class="ts-option" data-value="de">
+                <i class="fa-solid fa-map"></i><span>{{ tileserver_de }}</span>
+              </button>
+              <button type="button" class="ts-option" data-value="fr">
+                <i class="fa-solid fa-map"></i><span>{{ tileserver_fr }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Jawg tab -->
+          <div class="tab-pane fade" id="ts-jawg">
+            <div class="ts-grid">
+              <button type="button" class="ts-option" data-value="jawg-streets">
+                <i class="fa-solid fa-road"></i><span>{{ tileserver_jawg_streets }}</span>
+              </button>
+              <button type="button" class="ts-option" data-value="jawg-light">
+                <i class="fa-solid fa-sun"></i><span>{{ tileserver_jawg_light }}</span>
+              </button>
+              <button type="button" class="ts-option" data-value="jawg-dark">
+                <i class="fa-solid fa-moon"></i><span>{{ tileserver_jawg_dark }}</span>
+              </button>
+              <button type="button" class="ts-option" data-value="jawg-sunny">
+                <i class="fa-solid fa-cloud-sun"></i><span>{{ tileserver_jawg_sunny }}</span>
+              </button>
+              <button type="button" class="ts-option" data-value="jawg-terrain">
+                <i class="fa-solid fa-mountain"></i><span>{{ tileserver_jawg_terrain }}</span>
+              </button>
+              <button type="button" class="ts-option" data-value="jawg-lagoon">
+                <i class="fa-solid fa-water"></i><span>{{ tileserver_jawg_lagoon }}</span>
+              </button>
+              {% if is_premium %}
+              <button type="button" class="ts-option ts-vector" data-value="jawg-streets-v2">
+                <i class="fa-solid fa-road"></i><i class="fa-solid fa-gem ts-gem"></i><span>Streets V2</span>
+              </button>
+              <button type="button" class="ts-option ts-vector" data-value="jawg-lagoon-v2">
+                <i class="fa-solid fa-water"></i><i class="fa-solid fa-gem ts-gem"></i><span>Lagoon V2</span>
+              </button>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- OpenFreeMap tab -->
+          <div class="tab-pane fade" id="ts-ofm">
+            <div class="ts-grid">
+              <button type="button" class="ts-option ts-vector" data-value="ofm-liberty">
+                <i class="fa-solid fa-map-location-dot"></i><span>Liberty</span>
+              </button>
+              <button type="button" class="ts-option ts-vector" data-value="ofm-bright">
+                <i class="fa-solid fa-map"></i><span>Bright</span>
+              </button>
+              <button type="button" class="ts-option ts-vector" data-value="ofm-positron">
+                <i class="fa-solid fa-circle-dot"></i><span>Positron</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Other tab -->
+          <div class="tab-pane fade" id="ts-other">
+            <div class="ts-grid">
+              <button type="button" class="ts-option" data-value="none">
+                <i class="fa-solid fa-ban"></i><span>{{ none_t }}</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .ts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .ts-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-size: 0.8rem;
+    color: #444;
+    position: relative;
+  }
+  .ts-option i:first-child { font-size: 1.3rem; color: #666; }
+  .ts-option:hover:not(.ts-orm-disabled) { border-color: #0d6efd; background: #f0f6ff; }
+  .ts-option.ts-selected { border-color: #0d6efd; background: #e7f0ff; color: #0d6efd; }
+  .ts-option.ts-selected i:first-child { color: #0d6efd; }
+  .ts-option.ts-orm-disabled { opacity: 0.4; cursor: not-allowed; }
+  .ts-gem { position: absolute; top: 6px; right: 6px; font-size: 0.65rem !important; color: #00ced1 !important; }
+</style>
+
 <script>
 
   document.getElementById("clear-cache").addEventListener("click", function () {
@@ -256,18 +355,69 @@
     // Event listener for when the select changes
     $('#share_level').on('change', updateDetails);
 
+    // ---- Tileserver picker ----
+    const TS_META = {
+      'none':             { label: '{{ none_t }}',                  icon: 'fa-ban',              tab: 'ts-other' },
+      'osm':              { label: '{{ tileserver_default }}',     icon: 'fa-map',              tab: 'ts-general' },
+      'de':               { label: '{{ tileserver_de }}',          icon: 'fa-map',              tab: 'ts-general' },
+      'fr':               { label: '{{ tileserver_fr }}',          icon: 'fa-map',              tab: 'ts-general' },
+      'jawg-streets':     { label: '{{ tileserver_jawg_streets }}',icon: 'fa-road',             tab: 'ts-jawg' },
+      'jawg-light':       { label: '{{ tileserver_jawg_light }}',  icon: 'fa-sun',              tab: 'ts-jawg' },
+      'jawg-dark':        { label: '{{ tileserver_jawg_dark }}',   icon: 'fa-moon',             tab: 'ts-jawg' },
+      'jawg-sunny':       { label: '{{ tileserver_jawg_sunny }}',  icon: 'fa-cloud-sun',        tab: 'ts-jawg' },
+      'jawg-terrain':     { label: '{{ tileserver_jawg_terrain }}',icon: 'fa-mountain',         tab: 'ts-jawg' },
+      'jawg-lagoon':      { label: '{{ tileserver_jawg_lagoon }}', icon: 'fa-water',            tab: 'ts-jawg' },
+      'jawg-streets-v2':  { label: 'Streets V2',                   icon: 'fa-road',             tab: 'ts-jawg',   vector: true },
+      'jawg-lagoon-v2':   { label: 'Lagoon V2',                    icon: 'fa-water',            tab: 'ts-jawg',   vector: true },
+      'ofm-liberty':      { label: 'Liberty',                      icon: 'fa-map-location-dot', tab: 'ts-ofm',    vector: true },
+      'ofm-bright':       { label: 'Bright',                       icon: 'fa-map',              tab: 'ts-ofm',    vector: true },
+      'ofm-positron':     { label: 'Positron',                     icon: 'fa-circle-dot',       tab: 'ts-ofm',    vector: true },
+    };
+
+    function updateTileserverPicker(value) {
+      const meta = TS_META[value] || { label: value, icon: 'fa-map' };
+      $('#tileserver').val(value);
+      $('#tileserverPickerLabel').text(meta.label);
+      $('#tileserverPickerIcon').attr('class', 'fa-solid me-2 ' + meta.icon);
+      $('.ts-option').removeClass('ts-selected');
+      $(`.ts-option[data-value="${value}"]`).addClass('ts-selected');
+    }
+
+    function setOrmVectorDisabled(disabled) {
+      $('.ts-vector').toggleClass('ts-orm-disabled', disabled);
+    }
+
+    $('#tileserverPickerBtn').on('click', function() {
+      const current = $('#tileserver').val();
+      const meta = TS_META[current];
+      if (meta) {
+        $(`#tileserverTabs button[data-bs-target="#${meta.tab}"]`).tab('show');
+      }
+      updateTileserverPicker(current);
+      new bootstrap.Modal(document.getElementById('tileserverModal')).show();
+    });
+
+    $(document).on('click', '.ts-option', function() {
+      if ($(this).hasClass('ts-orm-disabled')) return;
+      const value = $(this).data('value');
+      updateTileserverPicker(value);
+      bootstrap.Modal.getInstance(document.getElementById('tileserverModal')).hide();
+    });
+
+    // Init picker label
+    updateTileserverPicker('{{ user_tileserver }}');
+
     {% if is_premium %}
     // On page load, check if current tileserver is an ORM map
     const currentTileserver = "{{ user_tileserver }}";
     const ormMatch = currentTileserver.match(/^openrailwaymap-(.+)\.(.+)$/);
-    
+
     if (ormMatch) {
         $('#orm-enabled').prop('checked', true);
         $('#orm-type').val(ormMatch[1]);
-        $('#tileserver').val(ormMatch[2]);
+        updateTileserverPicker(ormMatch[2]);
         $('#orm-options').show();
-        $('.vector-map').prop('disabled', true);
-        // Store the original base map
+        setOrmVectorDisabled(true);
         $('#tileserver').data('base-map', ormMatch[2]);
     }
     {% endif %}
@@ -549,57 +699,33 @@
   }
 
   {% if is_premium %}
-    // Store the original value
-    let originalTileserver = $('#tileserver').val();
-    
     // Handle ORM checkbox and vector map compatibility
     $('#orm-enabled').on('change', function() {
         const isChecked = $(this).is(':checked');
-        
+
         if (isChecked) {
-            // Store current base map
+            // Store current base map, falling back if a vector style is active
             const currentMap = $('#tileserver').val();
-            if (!currentMap.endsWith('-v2')) {
-                $('#tileserver').data('base-map', currentMap);
-            }
-            
-            // Show ORM options
+            const isVector = TS_META[currentMap] && TS_META[currentMap].vector;
+            const baseMap = isVector ? 'osm' : currentMap;
+            if (isVector) updateTileserverPicker('osm');
+            $('#tileserver').data('base-map', baseMap);
+
             $('#orm-options').slideDown();
-            
-            // Disable vector maps
-            $('.vector-map').prop('disabled', true).each(function() {
-                if ($(this).is(':selected')) {
-                    // If a vector map was selected, switch to default
-                    $('#tileserver').val('osm');
-                    $('#tileserver').data('base-map', 'osm');
-                }
-            });
-            
-            // Update the tileserver value with ORM
+            setOrmVectorDisabled(true);
             updateORMValue();
         } else {
-            // Hide ORM options
             $('#orm-options').slideUp();
-            
-            // Re-enable vector maps
-            $('.vector-map').prop('disabled', false);
-            
+            setOrmVectorDisabled(false);
+
             // Restore the base map
-            const baseMap = $('#tileserver').data('base-map') || 'default';
-            $('#tileserver').val(baseMap);
+            const baseMap = $('#tileserver').data('base-map') || 'osm';
+            updateTileserverPicker(baseMap);
         }
     });
 
     // Update ORM value when type changes
     $('#orm-type').on('change', updateORMValue);
-    
-    // Update ORM value when base map changes (but only if ORM is enabled)
-    $('#tileserver').on('change', function() {
-        if ($('#orm-enabled').is(':checked') && !$(this).val().endsWith('-v2')) {
-            $('#tileserver').data('base-map', $(this).val());
-            updateORMValue();
-        }
-    });
 
     function updateORMValue() {
         if ($('#orm-enabled').is(':checked')) {

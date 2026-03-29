@@ -59,17 +59,12 @@
           <ul class="dropdown-menu" aria-labelledby="userDropdown">
             <li>
               <a class="dropdown-item" href="{{ url_for('user_home', username=username) }}">
-                <i class="bi bi-map"></i> {{map}}
-              </a>
-            </li>            
-            <li>
-              <a class="dropdown-item" href="{{ url_for('user_dashboard', username=username) }}">
-               <i class="bi bi-speedometer2"></i> {{user_dashboard}}
+                <i class="bi bi-globe-europe-africa"></i> {{map}}
               </a>
             </li>
             <li>
-              <a class="dropdown-item" href="{{ url_for('new_map', username=username) }}">
-                <i class="bi bi-globe-europe-africa"></i> {{map}} ᵦ
+              <a class="dropdown-item" href="{{ url_for('user_dashboard', username=username) }}">
+               <i class="bi bi-speedometer2"></i> {{user_dashboard}}
               </a>
             </li>
           </ul>

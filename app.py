@@ -3222,11 +3222,7 @@ def landing():
                 return redirect(
                     url_for("dynamic_trips", username=username, time="projects")
                 )
-            elif user.default_landing == "new_map":
-                return redirect(
-                    url_for("new_map", username=username)
-                )
-            else:  # Default to map
+            else:  # Default to map (includes legacy "map" and "new_map" values)
                 return redirect(url_for("user_home", username=username))
 
     # If the user is not logged in or is forcing the landing page
@@ -3340,6 +3336,27 @@ def user_home(username):
     """
     Home page for validated users.
 
+    """
+    user = User.query.filter_by(username=username).first()
+    return render_template(
+        "new_map.html",
+        title=lang[session["userinfo"]["lang"]]["map"],
+        username=username,
+        nav="bootstrap/navigation.html",
+        isCurrent=has_current_trip(get_user_id(username)),
+        tileserver=user.tileserver,
+        globe=user.globe,
+        public=False,
+        **lang[session["userinfo"]["lang"]],
+        **session["userinfo"],
+    )
+
+
+@app.route("/u/<username>/leaflet")
+@login_required
+def user_home_leaflet(username):
+    """
+    Classic Leaflet map for validated users.
     """
     return render_template(
         "map.html",
@@ -3906,6 +3923,7 @@ def public(username):
     )
 
 
+@app.route("/public/<username>/map")
 @app.route("/public/<username>/new_map")
 @public_required
 def public_new(username):
@@ -4210,17 +4228,28 @@ def render_public_trip_page(
     )
 
 
-@app.route("/public/trip/<tripIds>")
-@app.route("/public/tag/<tagId>")
-@app.route("/public/ticket/<ticketId>")
-def public_trip(tripIds=None, tagId=None, ticketId=None):
+@app.route("/public/leaflet/trip/<tripIds>")
+@app.route("/public/leaflet/tag/<tagId>")
+@app.route("/public/leaflet/ticket/<ticketId>")
+def public_trip_leaflet(tripIds=None, tagId=None, ticketId=None):
     return render_public_trip_page(tripIds, tagId, ticketId)
 
 
 @app.route("/public/new/trip/<tripIds>")
 @app.route("/public/new/tag/<tagId>")
 @app.route("/public/new/ticket/<ticketId>")
-def public_trip_new(tripIds=None, tagId=None, ticketId=None):
+def public_trip_legacy(tripIds=None, tagId=None, ticketId=None):
+    if tripIds:
+        return redirect(url_for("public_trip", tripIds=tripIds), 301)
+    if tagId:
+        return redirect(url_for("public_trip", tagId=tagId), 301)
+    return redirect(url_for("public_trip", ticketId=request.view_args.get("ticketId")), 301)
+
+
+@app.route("/public/trip/<tripIds>")
+@app.route("/public/tag/<tagId>")
+@app.route("/public/ticket/<ticketId>")
+def public_trip(tripIds=None, tagId=None, ticketId=None):
     colorblind = False
     username = getUser()
     if username:
