@@ -9835,16 +9835,41 @@ def live_map():
     """
     Shows the global map of all public users currently traveling
     """
+    username = getUser()
+    user = User.query.filter_by(username=username).first() if username else None
     return render_template(
         "public/current_global.html",
-        username=getUser(),
+        username=username,
         logosList=listOperatorsLogos(),
         translations=lang[session["userinfo"]["lang"]],
         api_endpoint=url_for("get_public_current_trips"),
+        tileserver=user.tileserver if user else "osm",
+        globe=user.globe if user else False,
         **lang[session["userinfo"]["lang"]],
         **session["userinfo"],
         title=lang[session["userinfo"]["lang"]]["live_map"],
     )
+
+@app.route("/new_live_map")
+def new_live_map():
+    """
+    MapLibre version of the live map (alongside the classic Leaflet one)
+    """
+    username = getUser()
+    user = User.query.filter_by(username=username).first() if username else None
+    return render_template(
+        "public/current_global_maplibre.html",
+        username=username,
+        logosList=listOperatorsLogos(),
+        translations=lang[session["userinfo"]["lang"]],
+        api_endpoint=url_for("get_public_current_trips"),
+        tileserver=user.tileserver if user else "osm",
+        globe=user.globe if user else False,
+        **lang[session["userinfo"]["lang"]],
+        **session["userinfo"],
+        title=lang[session["userinfo"]["lang"]]["live_map"],
+    )
+
 
 @app.route("/admin/live_map")
 @owner_required
@@ -9852,13 +9877,17 @@ def admin_live_map():
     """
     Shows the global map of ALL users currently traveling (admin/owner access)
     """
+    username = getUser()
+    user = User.query.filter_by(username=username).first() if username else None
     return render_template(
-        "public/current_global.html",  # Same template
+        "public/current_global.html",
         title=f"Admin {lang[session['userinfo']['lang']]['live_map']}",
-        username=getUser(),
+        username=username,
         logosList=listOperatorsLogos(),
         translations=lang[session["userinfo"]["lang"]],
         api_endpoint=url_for("get_all_current_trips"),
+        tileserver=user.tileserver if user else "osm",
+        globe=user.globe if user else False,
         **lang[session["userinfo"]["lang"]],
         **session["userinfo"],
     )
