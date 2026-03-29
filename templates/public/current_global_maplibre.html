@@ -89,15 +89,15 @@ function getPopupContent(tripObj) {
   if (trip.multi_operators) {
     trip.multi_operators.forEach(op => {
       operatorParts.push(op.logo_url
-        ? `<img src="/static/${op.logo_url}" alt="${op.operator_name}" style="max-height:40px;object-fit:contain;">`
+        ? `<img src="/static/${op.logo_url}" alt="${op.operator_name}" style="max-height:40px;max-width:120px;object-fit:contain;">`
         : `<span>${op.operator_name}</span>`);
     });
   } else if (trip.logo_url) {
-    operatorParts.push(`<img src="/static/${trip.logo_url}" alt="${trip.operator || ''}" style="max-height:40px;object-fit:contain;">`);
+    operatorParts.push(`<img src="/static/${trip.logo_url}" alt="${trip.operator || ''}" style="max-height:40px;max-width:120px;object-fit:contain;">`);
   } else if (trip.operator) {
     String(trip.operator).split(',').map(s => s.trim()).forEach(op => {
       operatorParts.push(logosList[op]
-        ? `<img src="/static/${logosList[op]}" alt="${op}" style="max-height:40px;object-fit:contain;">`
+        ? `<img src="/static/${logosList[op]}" alt="${op}" style="max-height:40px;max-width:120px;object-fit:contain;">`
         : `<span>${op}</span>`);
     });
   }
