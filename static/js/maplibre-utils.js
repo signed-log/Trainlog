@@ -24,6 +24,7 @@ const MapConfig = {
         "jawg-streets-v2":'/getVectorStyle/{language}/jawg-streets.json',
         "jawg-lagoon-v2":'/getVectorStyle/{language}/jawg-lagoon.json',
         "trainlog-lagoon-v2":'/getVectorStyle/{language}/trainlog-lagoon.json',
+        "dark-train":       '/getVectorStyle/{language}/trainlog-dark.json',
         "ofm-liberty": 'https://tiles.openfreemap.org/styles/liberty',
         "ofm-bright": 'https://tiles.openfreemap.org/styles/bright',
         "ofm-positron": 'https://tiles.openfreemap.org/styles/positron'
@@ -93,6 +94,7 @@ function isVectorTileServer(tileserver) {
         'jawg-streets-v2',
         'jawg-lagoon-v2',
         'trainlog-lagoon-v2',
+        'dark-train',
         'ofm-liberty',
         'ofm-bright',
         'ofm-positron'
