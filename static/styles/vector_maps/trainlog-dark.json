@@ -6033,7 +6033,8 @@
           10,
           18,
           14
-        ]
+        ],
+        "text-max-width": 5.0
       },
       "paint": {
         "text-color": "#B5B5B5"
@@ -6867,7 +6868,8 @@
           15,
           16
         ],
-        "text-transform": "uppercase"
+        "text-transform": "uppercase",
+        "text-max-width": 5.0
       },
       "paint": {
         "text-color": "#B5B5B5",
@@ -6926,7 +6928,7 @@
         "text-font": [
           "Noto Sans Regular"
         ],
-        "text-max-width": 7.0,
+        "text-max-width": 5.0,
         "text-padding": 1.0,
         "text-size": [
           "interpolate",
@@ -7012,7 +7014,7 @@
         "text-font": [
           "Noto Sans Regular"
         ],
-        "text-max-width": 7.0,
+        "text-max-width": 5.0,
         "text-offset": [
           "step",
           [
@@ -7180,7 +7182,8 @@
           12,
           14,
           22
-        ]
+        ],
+        "text-max-width": 5.0
       },
       "paint": {
         "icon-opacity": [
@@ -7313,7 +7316,8 @@
           12,
           10,
           22
-        ]
+        ],
+        "text-max-width": 5.0
       },
       "paint": {
         "icon-opacity": [
@@ -7327,185 +7331,6 @@
         ],
         "text-color": "#B5B5B5",
         "text-halo-blur": 1.0,
-        "text-halo-color": "#000000",
-        "text-halo-width": 1.0
-      }
-    },
-    {
-      "type": "symbol",
-      "id": "state-label-md",
-      "maxzoom": 10,
-      "metadata": {
-        "taxonomy:group": "states",
-        "taxonomy:example": "La R\u00e9union"
-      },
-      "source": "openmaptiles",
-      "source-layer": "place",
-      "filter": [
-        "all",
-        [
-          "==",
-          [
-            "get",
-            "class"
-          ],
-          "state"
-        ],
-        [
-          "==",
-          [
-            "get",
-            "rank"
-          ],
-          3
-        ]
-      ],
-      "layout": {
-        "text-field": [
-          "case",
-          [
-            "has",
-            "name:nonlatin"
-          ],
-          [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
-          ],
-          [
-            "coalesce",
-            [
-              "get",
-              "name:en"
-            ],
-            [
-              "get",
-              "name"
-            ]
-          ]
-        ],
-        "text-font": [
-          "Noto Sans Regular"
-        ],
-        "text-max-width": 6.0,
-        "text-padding": 5.0,
-        "text-size": [
-          "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "zoom"
-          ],
-          5,
-          10,
-          8,
-          18
-        ]
-      },
-      "paint": {
-        "text-color": "#B5B5B5",
-        "text-halo-color": "#000000",
-        "text-halo-width": 1.0
-      }
-    },
-    {
-      "type": "symbol",
-      "id": "state-label-lg",
-      "maxzoom": 10,
-      "metadata": {
-        "taxonomy:group": "states",
-        "taxonomy:example": "Colorado"
-      },
-      "source": "openmaptiles",
-      "source-layer": "place",
-      "filter": [
-        "all",
-        [
-          "==",
-          [
-            "get",
-            "class"
-          ],
-          "state"
-        ],
-        [
-          ">=",
-          [
-            "get",
-            "rank"
-          ],
-          1
-        ],
-        [
-          "<=",
-          [
-            "get",
-            "rank"
-          ],
-          2
-        ]
-      ],
-      "layout": {
-        "text-field": [
-          "case",
-          [
-            "has",
-            "name:nonlatin"
-          ],
-          [
-            "concat",
-            [
-              "get",
-              "name:latin"
-            ],
-            "\n",
-            [
-              "get",
-              "name:nonlatin"
-            ]
-          ],
-          [
-            "coalesce",
-            [
-              "get",
-              "name:en"
-            ],
-            [
-              "get",
-              "name"
-            ]
-          ]
-        ],
-        "text-font": [
-          "Noto Sans Regular"
-        ],
-        "text-max-width": 6.0,
-        "text-padding": 5.0,
-        "text-size": [
-          "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "zoom"
-          ],
-          3,
-          8,
-          8,
-          24
-        ],
-        "text-transform": "uppercase"
-      },
-      "paint": {
-        "text-color": "#B5B5B5",
         "text-halo-color": "#000000",
         "text-halo-width": 1.0
       }
@@ -7625,7 +7450,8 @@
           12,
           10,
           22
-        ]
+        ],
+        "text-max-width": 5.0
       },
       "paint": {
         "icon-opacity": [
