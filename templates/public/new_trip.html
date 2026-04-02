@@ -1145,6 +1145,31 @@ if (numberedMarkers.length > 0) {
                     'line-opacity': 0.8
                 };
 
+                // Shadow layers (added first so they sit below the lines)
+                const currentPastShadowId = `current-${type.id}-past-shadow`;
+                if (!map.getLayer(currentPastShadowId)) {
+                    map.addLayer({
+                        id: currentPastShadowId,
+                        type: 'line',
+                        source: 'current-trips',
+                        filter: ['all', ['==', ['get', 'type'], type.id], ['==', ['get', 'time'], 'past']],
+                        layout: { 'line-join': 'round', 'line-cap': 'round', 'visibility': 'visible' },
+                        paint: { 'line-color': '#000000', 'line-width': (type.id === 'air') ? 3 : 5, 'line-opacity': 0.8, 'line-blur': 0.5 }
+                    }, beforeMarkersId);
+                }
+
+                const currentFutureShadowId = `current-${type.id}-future-shadow`;
+                if (!map.getLayer(currentFutureShadowId)) {
+                    map.addLayer({
+                        id: currentFutureShadowId,
+                        type: 'line',
+                        source: 'current-trips',
+                        filter: ['all', ['==', ['get', 'type'], type.id], ['==', ['get', 'time'], 'plannedFuture']],
+                        layout: { 'line-join': 'round', 'line-cap': 'round', 'visibility': 'visible' },
+                        paint: { 'line-color': '#000000', 'line-width': (type.id === 'air') ? 3 : 5, 'line-opacity': 0.3, 'line-blur': 0.5 }
+                    }, beforeMarkersId);
+                }
+
                 // Current trip past layer (full trip in normal color)
                 const currentPastId = `current-${type.id}-past`;
                 if (!map.getLayer(currentPastId)) {
